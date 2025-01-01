@@ -4,29 +4,55 @@ from chromadb.config import Settings
 from chromadb.utils import embedding_functions
 import os
 from pathlib import Path
+import re
+from sentence_transformers import SentenceTransformer
 
 class VectorStore:
     def __init__(self, persist_dir: Path = Path("chroma_db")):
         self.persist_dir = persist_dir
-        # Create persist directory if it doesn't exist
         self.persist_dir.mkdir(exist_ok=True)
-        
-        # Initialize ChromaDB client
         self.client = chromadb.Client(Settings(
             persist_directory=str(persist_dir),
             anonymized_telemetry=False
         ))
-        
-        # Use OpenAI's embedding function
-        self.embedding_function = embedding_functions.OpenAIEmbeddingFunction(
-            api_key=os.getenv("OPENAI_API_KEY"),
-            model_name="text-embedding-ada-002"
+        # Use SentenceTransformers instead of OpenAI
+        self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.embedding_function = embedding_functions.SentenceTransformerEmbeddingFunction(
+            model_name='all-MiniLM-L6-v2'
         )
+
+    def _sanitize_collection_name(self, name: str) -> str:
+        """Sanitize collection name to meet ChromaDB requirements."""
+        # Remove file extension
+        name = os.path.splitext(name)[0]
+        
+        # Replace spaces and invalid characters with underscores
+        name = re.sub(r'[^a-zA-Z0-9-]', '_', name)
+        
+        # Remove consecutive underscores
+        name = re.sub(r'_+', '_', name)
+        
+        # Ensure it starts and ends with alphanumeric character
+        name = re.sub(r'^[^a-zA-Z0-9]+', '', name)
+        name = re.sub(r'[^a-zA-Z0-9]+$', '', name)
+        
+        # If name is too short, pad it
+        if len(name) < 3:
+            name = f"doc_{name}"
+        
+        # If name is too long, truncate it
+        if len(name) > 63:
+            name = name[:63]
+            # Ensure it still ends with alphanumeric
+            name = re.sub(r'[^a-zA-Z0-9]+$', '', name)
+        
+        return name
     
     def create_collection(self, name: str) -> Any:
         """Create or get a collection."""
+        sanitized_name = self._sanitize_collection_name(name)
         return self.client.create_collection(
-            name=name,
+            name=sanitized_name,
             embedding_function=self.embedding_function,
             get_or_create=True
         )
@@ -35,11 +61,9 @@ class VectorStore:
         """Add texts to the vector store."""
         collection = self.create_collection(collection_name)
         
-        # If no metadata is provided, create empty metadata for each text
         if metadata is None:
             metadata = [{"index": i} for i in range(len(texts))]
         
-        # Add texts with their IDs and metadata
         collection.add(
             documents=texts,
             ids=[f"text_{i}" for i in range(len(texts))],
@@ -53,7 +77,8 @@ class VectorStore:
         n_results: int = 4
     ) -> List[Dict[str, Any]]:
         """Search for similar texts in the vector store."""
-        collection = self.create_collection(collection_name)
+        sanitized_name = self._sanitize_collection_name(collection_name)
+        collection = self.create_collection(sanitized_name)
         
         results = collection.query(
             query_texts=[query],

@@ -1,23 +1,22 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from pathlib import Path
+from services.chat_service import chat_service
 
 router = APIRouter()
 
 class ChatRequest(BaseModel):
     message: str
-    filename: str
+    filename: str | None = None
 
 class ChatResponse(BaseModel):
     answer: str
+    sources: str | None = None
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     try:
-        # TODO: Implement actual PDF processing and LLM integration
-        # For now, return a mock response
-        return ChatResponse(
-            answer=f"This is a mock response to your question about {request.filename}: {request.message}"
-        )
+        response = await chat_service.chat(request.message, request.filename)
+        return ChatResponse(**response)
     except Exception as e:
+        print(f"Chat error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e)) 
