@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from api.upload import router as upload_router
+from api.chat import router as chat_router
 
 app = FastAPI(title="PDF Chatbot API")
 
@@ -15,6 +16,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(upload_router, prefix="/api", tags=["upload"])
+app.include_router(chat_router, prefix="/api", tags=["chat"])
 
 @app.get("/")
 async def root():
