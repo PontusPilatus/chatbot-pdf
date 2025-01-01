@@ -86,3 +86,53 @@ OPENAI_API_KEY=your_openai_api_key
 - Interactive chat interface
 - Context-aware responses based on PDF content
 - Real-time communication between frontend and backend
+
+## Project Roadmap
+
+### PDF Processing Backend
+- [ ] Create PDF text extraction service
+- [ ] Implement text chunking for large documents
+- [ ] Set up vector database (ChromaDB) for document storage
+- [ ] Create embeddings generation service
+- [ ] Add document cleanup and preprocessing
+
+### Chat Functionality
+- [ ] Create chat message interface/types
+- [ ] Implement chat history state management
+- [ ] Add chat message components
+- [ ] Create chat API endpoint in backend
+- [ ] Integrate with OpenAI/LLM API
+- [ ] Add streaming response support
+- [ ] Implement context window management
+
+### File Management
+- [ ] Add file list/history view
+- [ ] Implement file deletion
+- [ ] Add file size limits and validation
+- [ ] Create file metadata storage
+- [ ] Add progress bar for uploads
+- [ ] Handle duplicate file names
+
+### UI/UX Improvements
+- [ ] Add loading states and animations
+- [ ] Implement error handling and user feedback
+- [ ] Add mobile responsiveness
+- [ ] Create dark mode support
+- [ ] Add keyboard shortcuts
+- [ ] Implement session management
+
+### Security & Performance
+- [ ] Add API rate limiting
+- [ ] Implement proper error handling
+- [ ] Add input sanitization
+- [ ] Optimize PDF processing for large files
+- [ ] Add caching layer
+- [ ] Implement proper environment variable management
+
+### Nice to Have Features
+- [ ] Multi-file support (chat with multiple PDFs)
+- [ ] Export chat history
+- [ ] PDF preview
+- [ ] Highlight relevant PDF sections in responses
+- [ ] Save favorite/frequent questions
+- [ ] User authentication
