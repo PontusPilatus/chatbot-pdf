@@ -1,0 +1,1 @@
+fastapi==0.104.1\nuvicorn==0.24.0\npython-multipart==0.0.6\npydantic==2.5.2\npython-dotenv==1.0.0\nlangchain==0.0.350\nopenai==1.3.7\npyPDF2==3.0.1\nchromadb==0.4.18
