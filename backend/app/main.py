@@ -1,3 +1,7 @@
+# Set up environment before any other imports
+from services.env_setup import setup_environment
+setup_environment()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv

@@ -5,7 +5,7 @@ export interface ChatMessage {
   role: MessageRole
   content: string
   timestamp: string
-  isTyping?: boolean
+  isStreaming?: boolean
 }
 
 export interface ChatState {

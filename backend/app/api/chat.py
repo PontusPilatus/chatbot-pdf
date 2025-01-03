@@ -1,22 +1,26 @@
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from services.chat_service import chat_service
+import json
 
 router = APIRouter()
 
 class ChatRequest(BaseModel):
     message: str
-    filename: str | None = None
+    filename: str | None
 
-class ChatResponse(BaseModel):
-    answer: str
-    sources: str | None = None
-
-@router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
+async def generate_stream_response(message: str, filename: str | None):
     try:
-        response = await chat_service.chat(request.message, request.filename)
-        return ChatResponse(**response)
+        async for chunk in chat_service.stream_chat(message, filename):
+            yield f"data: {json.dumps({'chunk': chunk})}\n\n"
     except Exception as e:
-        print(f"Chat error: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+        yield f"data: {json.dumps({'error': str(e)})}\n\n"
+    yield "data: [DONE]\n\n"
+
+@router.post("/chat")
+async def chat(request: ChatRequest):
+    return StreamingResponse(
+        generate_stream_response(request.message, request.filename),
+        media_type="text/event-stream"
+    ) 

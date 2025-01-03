@@ -1,65 +1,55 @@
 'use client'
 
-import { ChatMessage as ChatMessageType } from '@/types/chat'
+import type { ChatMessage } from '@/types/chat'
+import { FiUser } from 'react-icons/fi'
+import { RiRobot2Line } from 'react-icons/ri'
 
-interface ChatMessageProps {
-  message: ChatMessageType
+interface Props {
+  message: ChatMessage
 }
 
-const BotAvatar = () => (
-  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-    <svg
-      className="w-5 h-5 text-blue-600"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-      />
-    </svg>
+const TypingIndicator = () => (
+  <div className="flex items-center space-x-2">
+    <div className="flex space-x-1">
+      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+    </div>
   </div>
 )
 
-const UserAvatar = () => (
-  <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-    <svg
-      className="w-5 h-5 text-gray-600"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-      />
-    </svg>
-  </div>
-)
-
-export default function ChatMessage({ message }: ChatMessageProps) {
+export default function ChatMessage({ message }: Props) {
   const isUser = message.role === 'user'
 
   return (
-    <div className={`flex gap-3 mb-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-      {isUser ? <UserAvatar /> : <BotAvatar />}
-      <div
-        className={`max-w-[80%] rounded-lg px-4 py-2 ${isUser
-          ? 'bg-blue-500 text-white'
-          : 'bg-gray-100 text-gray-800'
-          }`}
-      >
-        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-        <span className="text-xs opacity-50 mt-1 block">
-          {new Date(message.timestamp).toLocaleTimeString()}
-        </span>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
+      <div className={`flex items-start max-w-[80%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
+        <div className={`flex-shrink-0 ${isUser ? 'ml-2' : 'mr-2'}`}>
+          {isUser ? (
+            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
+              <FiUser className="text-white" />
+            </div>
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
+              <RiRobot2Line className="text-white" />
+            </div>
+          )}
+        </div>
+        <div
+          className={`rounded-lg p-3 ${isUser
+            ? 'bg-blue-500 text-white'
+            : 'bg-gray-100 text-gray-900'
+            }`}
+        >
+          {message.isStreaming ? (
+            <>
+              <div className="whitespace-pre-wrap mb-1">{message.content}</div>
+              <TypingIndicator />
+            </>
+          ) : (
+            <div className="whitespace-pre-wrap">{message.content}</div>
+          )}
+        </div>
       </div>
     </div>
   )
