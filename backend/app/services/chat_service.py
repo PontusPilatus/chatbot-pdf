@@ -131,6 +131,7 @@ class ChatService:
         self.conversations: Dict[str, Conversation] = {}
         self.client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.usage_control = UsageControl()
+        self.max_context_tokens = 4000  # Maximum tokens for context (leaving room for response)
         self.system_prompt = """You are a helpful AI assistant that answers questions about PDF documents.
         You should:
         1. Answer questions based on the provided context from the PDF
@@ -143,31 +144,62 @@ class ChatService:
         """
 
     async def get_relevant_context(self, query: str, filename: str, conversation: Conversation) -> str:
-        """Get relevant context from the vector store."""
+        """Get relevant context from the vector store with smart token management."""
         try:
             # Get similar chunks from vector store
             results = await vector_store.similarity_search(
                 collection_name=filename,
                 query=query,
-                k=5  # Get top 5 most relevant chunks
+                k=8  # Get more chunks initially, we'll filter based on relevance and tokens
             )
             
             if not results:
                 return ""
 
+            # Get conversation history with token count
+            conv_history = conversation.get_context()
+            conv_tokens = self.usage_control.count_tokens(conv_history)
+            
+            # Calculate remaining tokens for PDF context
+            system_tokens = self.usage_control.count_tokens(self.system_prompt)
+            query_tokens = self.usage_control.count_tokens(query)
+            available_tokens = self.max_context_tokens - system_tokens - query_tokens - conv_tokens
+            
             # Format context with conversation history
-            context = "Previous conversation:\n" + conversation.get_context() + "\n\n"
+            context = "Previous conversation:\n" + conv_history + "\n\n"
             context += "Relevant document sections:\n"
             
-            for i, result in enumerate(results, 1):
+            # Add chunks while respecting token limit and relevance score
+            current_tokens = self.usage_control.count_tokens(context)
+            added_chunks = 0
+            
+            for result in results:
                 text = result["text"]
                 score = result["score"]
                 metadata = result.get("metadata", {})
                 page = metadata.get("page", "unknown")
                 
-                if score > 0.5:  # Only include relevant chunks
-                    context += f"\nSection {i} (Page {page}):\n{text}\n"
+                # Only consider chunks with good relevance
+                if score <= 0.5:
+                    continue
+                
+                # Calculate tokens for this chunk
+                chunk_text = f"\nSection {added_chunks + 1} (Page {page}):\n{text}\n"
+                chunk_tokens = self.usage_control.count_tokens(chunk_text)
+                
+                # Check if adding this chunk would exceed token limit
+                if current_tokens + chunk_tokens > available_tokens:
+                    break
+                
+                context += chunk_text
+                current_tokens += chunk_tokens
+                added_chunks += 1
+                
+                # Stop after adding enough relevant chunks
+                if added_chunks >= 5:
+                    break
 
+            logger.info(f"Context window usage: {current_tokens}/{self.max_context_tokens} tokens")
             return context
 
         except Exception as e:

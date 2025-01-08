@@ -2,6 +2,33 @@
 
 An AI-powered chatbot that can answer questions about PDF documents. Built with Next.js, TypeScript, Python, and FastAPI.
 
+## Features
+
+- 📄 PDF Processing
+  - Automatic text extraction and preprocessing
+  - Smart text chunking for large documents
+  - Vector embeddings for semantic search
+  - ChromaDB for efficient document storage
+
+- 💬 Chat Interface
+  - Interactive real-time chat with streaming responses
+  - Context-aware responses based on PDF content
+  - Smart context window management
+  - Conversation history tracking
+  - Token usage optimization
+
+- 📊 Resource Management
+  - Rate limiting and usage controls
+  - Token counting and cost estimation
+  - Daily cost limits
+  - Efficient context window utilization
+
+- 🔄 Real-time Updates
+  - Progress bar for file uploads
+  - Loading states and animations
+  - Error handling and user feedback
+  - Streaming chat responses
+
 ## Project Structure
 
 ```
@@ -68,8 +95,6 @@ The backend API will be available at `http://localhost:8000`
 
 ## Environment Variables
 
-You'll need to set up the following environment variables:
-
 ### Frontend (.env.local)
 ```
 NEXT_PUBLIC_API_URL=http://localhost:8000
@@ -78,56 +103,52 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 ### Backend (.env)
 ```
 OPENAI_API_KEY=your_openai_api_key
+MAX_DAILY_COST=1.0
+MAX_TOKENS_PER_REQUEST=2000
+RATE_LIMIT_PER_MIN=10
 ```
-
-## Features
-
-- PDF file upload and processing
-- Interactive chat interface
-- Context-aware responses based on PDF content
-- Real-time communication between frontend and backend
 
 ## Project Roadmap
 
 ### PDF Processing Backend
-- [ ] Create PDF text extraction service
-- [ ] Implement text chunking for large documents
-- [ ] Set up vector database (ChromaDB) for document storage
-- [ ] Create embeddings generation service
-- [ ] Add document cleanup and preprocessing
+- [x] Create PDF text extraction service
+- [x] Implement text chunking for large documents
+- [x] Set up vector database (ChromaDB) for document storage
+- [x] Create embeddings generation service
+- [x] Add document cleanup and preprocessing
 
 ### Chat Functionality
-- [ ] Create chat message interface/types
-- [ ] Implement chat history state management
-- [ ] Add chat message components
-- [ ] Create chat API endpoint in backend
-- [ ] Integrate with OpenAI/LLM API
-- [ ] Add streaming response support
-- [ ] Implement context window management
+- [x] Create chat message interface/types
+- [x] Implement chat history state management
+- [x] Add chat message components
+- [x] Create chat API endpoint in backend
+- [x] Integrate with OpenAI/LLM API
+- [x] Add streaming response support
+- [x] Implement context window management
 
 ### File Management
 - [ ] Add file list/history view
 - [ ] Implement file deletion
 - [ ] Add file size limits and validation
 - [ ] Create file metadata storage
-- [ ] Add progress bar for uploads
+- [x] Add progress bar for uploads
 - [ ] Handle duplicate file names
 
 ### UI/UX Improvements
-- [ ] Add loading states and animations
-- [ ] Implement error handling and user feedback
+- [x] Add loading states and animations
+- [x] Implement error handling and user feedback
 - [ ] Add mobile responsiveness
 - [ ] Create dark mode support
 - [ ] Add keyboard shortcuts
 - [ ] Implement session management
 
 ### Security & Performance
-- [ ] Add API rate limiting
-- [ ] Implement proper error handling
-- [ ] Add input sanitization
-- [ ] Optimize PDF processing for large files
+- [x] Add API rate limiting
+- [x] Implement proper error handling
+- [x] Add input sanitization
+- [x] Optimize PDF processing for large files
 - [ ] Add caching layer
-- [ ] Implement proper environment variable management
+- [x] Implement proper environment variable management
 
 ### Nice to Have Features
 - [ ] Multi-file support (chat with multiple PDFs)
@@ -136,3 +157,23 @@ OPENAI_API_KEY=your_openai_api_key
 - [ ] Highlight relevant PDF sections in responses
 - [ ] Save favorite/frequent questions
 - [ ] User authentication
+
+## Implementation Details
+
+### Context Window Management
+- Smart token counting for system prompts, conversation history, and PDF chunks
+- Dynamic context selection based on relevance scores
+- Token limit management to prevent API limits
+- Efficient conversation history tracking
+
+### Resource Management
+- Token usage tracking and cost estimation
+- Rate limiting per minute
+- Daily cost limits
+- Input/output token optimization
+
+### Error Handling
+- Graceful error recovery
+- User-friendly error messages
+- Logging for debugging
+- Rate limit notifications

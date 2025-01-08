@@ -61,23 +61,35 @@ export default function FileUpload({ onFileProcessed, onSummaryReceived }: FileU
   });
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-4">
+    <div className="w-full max-w-2xl mx-auto">
       <div
         {...getRootProps()}
         className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer
-                    ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}
-                    ${error ? 'border-red-500 bg-red-50' : ''}
-                    hover:border-blue-500 hover:bg-blue-50 transition-colors`}
+          ${isDragActive
+            ? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30'
+            : 'border-gray-300 dark:border-gray-600'}
+          ${error
+            ? 'border-red-500 bg-red-50 dark:border-red-400 dark:bg-red-900/30'
+            : ''}
+          hover:border-blue-500 dark:hover:border-blue-400 
+          hover:bg-blue-50 dark:hover:bg-blue-900/30 
+          transition-colors`}
       >
         <input {...getInputProps()} />
-        <FiUploadCloud className="mx-auto h-12 w-12 text-gray-400" />
-        <p className="mt-2 text-sm text-gray-600">
+        <FiUploadCloud className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
           {uploading ? 'Uploading...' :
             isDragActive ? 'Drop the PDF here...' :
               'Drag & drop a PDF file here, or click to select'}
         </p>
-        <p className="mt-1 text-xs text-gray-500">Only PDF files are supported (max 10MB)</p>
-        {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          Only PDF files are supported (max 10MB)
+        </p>
+        {error && (
+          <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+            {error}
+          </p>
+        )}
       </div>
     </div>
   );

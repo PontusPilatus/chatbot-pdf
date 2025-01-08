@@ -170,5 +170,19 @@ class VectorStore:
         
         return name
 
+    async def delete_collection(self, collection_name: str) -> None:
+        """Delete a collection from the vector store."""
+        try:
+            # Sanitize collection name
+            collection_name = self._sanitize_collection_name(collection_name)
+            
+            # Delete the collection
+            self.client.delete_collection(collection_name)
+            logger.info(f"Collection deleted: {collection_name}")
+            
+        except Exception as e:
+            logger.error(f"Error deleting collection {collection_name}: {str(e)}")
+            raise
+
 # Create a singleton instance
 vector_store = VectorStore() 

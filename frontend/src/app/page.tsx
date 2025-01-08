@@ -1,17 +1,18 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import FileUpload from './components/FileUpload'
 import ChatMessage from './components/ChatMessage'
 import { ChatMessage as ChatMessageType } from '@/types/chat'
 import { v4 as uuidv4 } from 'uuid'
+import Sidebar from './components/Sidebar'
+import { FiSend } from 'react-icons/fi'
 
 const TypingIndicator = () => (
   <div className="flex items-center space-x-2 p-2">
     <div className="flex space-x-1">
-      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
     </div>
   </div>
 )
@@ -187,44 +188,42 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex flex-col items-center p-4 bg-gray-50">
-      <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-6 flex flex-col h-[calc(100vh-2rem)]">
-        {/* File Upload and Active PDF Section */}
-        <div className="mb-4">
-          {activePDF ? (
-            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-center space-x-3">
-                <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <span className="font-medium text-blue-900">Active PDF: {activePDF}</span>
-              </div>
-              <button
-                onClick={() => setActivePDF(null)}
-                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-              >
-                Upload New PDF
-              </button>
-            </div>
-          ) : (
-            <FileUpload
-              onFileProcessed={handleFileProcessed}
-              onSummaryReceived={handleSummaryReceived}
-            />
-          )}
+    <main className="h-screen flex bg-gray-50 dark:bg-gray-900">
+      {/* Sidebar */}
+      <Sidebar
+        activePDF={activePDF}
+        onFileProcessed={handleFileProcessed}
+        onSummaryReceived={handleSummaryReceived}
+        className="h-screen"
+      />
+
+      {/* Chat Area */}
+      <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-gray-800">
+        {/* Chat Header */}
+        <div className="h-16 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
+          <h2 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center">
+            {activePDF ? (
+              <>
+                <span className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mr-2"></span>
+                {activePDF}
+              </>
+            ) : (
+              'General Chat'
+            )}
+          </h2>
         </div>
 
-        {/* Chat Section */}
-        <div className="flex-1 flex flex-col min-h-0">
-          {/* Messages */}
-          <div
-            ref={chatContainerRef}
-            className="flex-1 overflow-y-auto p-4 scroll-smooth"
-          >
+        {/* Messages */}
+        <div
+          className="flex-1 overflow-y-auto py-6 bg-white dark:bg-gray-800"
+          ref={chatContainerRef}
+        >
+          <div className="max-w-3xl mx-auto space-y-6 px-6">
             {messages.map(message => (
               message.isStreaming ? (
-                <div key={message.id} className="flex justify-start mb-4">
-                  <div className="bg-white rounded-lg p-2 shadow-sm max-w-[80%]">
+                <div key={message.id} className="flex justify-start">
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-2xl p-2 shadow-sm max-w-[80%] 
+                    border border-gray-100 dark:border-gray-600">
                     <TypingIndicator />
                   </div>
                 </div>
@@ -234,24 +233,33 @@ export default function Home() {
             ))}
             {isLoading && (
               <div className="flex justify-center items-center py-4">
-                <div className="animate-pulse text-gray-500">Processing...</div>
+                <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                  <div className="w-4 h-4 border-2 border-gray-300 dark:border-gray-600 
+                    border-t-blue-500 dark:border-t-blue-400 rounded-full animate-spin">
+                  </div>
+                  <span>Processing...</span>
+                </div>
               </div>
             )}
           </div>
+        </div>
 
-          {/* Input Area */}
-          <div className="border-t p-4 bg-white rounded-b-lg">
-            <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+        {/* Input Area */}
+        <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4">
+          <div className="max-w-3xl mx-auto">
+            <form onSubmit={handleSubmit} className="relative">
               <textarea
                 value={inputMessage}
-                onChange={(e) => {
-                  setInputMessage(e.target.value)
-                }}
+                onChange={(e) => setInputMessage(e.target.value)}
                 placeholder={activePDF
                   ? "Ask a question about the PDF..."
                   : "Ask me anything about my functionality..."}
-                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[60px] max-h-[120px] resize-y
-                  text-gray-900 placeholder-gray-500 bg-white border-gray-300 text-sm"
+                className="w-full p-4 pr-24 border dark:border-gray-700 rounded-2xl focus:outline-none 
+                  focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
+                  min-h-[60px] max-h-[180px] resize-y 
+                  bg-gray-50 dark:bg-gray-700 
+                  placeholder-gray-500 dark:placeholder-gray-400 
+                  text-gray-900 dark:text-gray-100"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault()
@@ -259,17 +267,19 @@ export default function Home() {
                   }
                 }}
               />
-              <div className="flex justify-between items-center text-xs">
-                <p className="text-gray-600">
-                  Press Enter to send, Shift + Enter for new line
-                </p>
+              <div className="absolute right-2 bottom-2 flex items-center space-x-2">
+                <span className="text-xs text-gray-400 dark:text-gray-500">
+                  {inputMessage.length > 0 ? `${inputMessage.length} chars` : 'Enter to send'}
+                </span>
                 <button
                   type="submit"
                   disabled={!inputMessage.trim() || isLoading}
-                  className="px-4 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 
-                    disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium text-sm"
+                  className="p-2 bg-blue-500 dark:bg-blue-600 text-white rounded-xl 
+                    hover:bg-blue-600 dark:hover:bg-blue-700
+                    disabled:bg-gray-300 dark:disabled:bg-gray-600 
+                    disabled:cursor-not-allowed"
                 >
-                  {isLoading ? 'Sending...' : 'Send'}
+                  <FiSend className={`w-4 h-4 ${isLoading ? 'animate-pulse' : ''}`} />
                 </button>
               </div>
             </form>

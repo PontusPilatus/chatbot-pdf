@@ -1,54 +1,49 @@
 'use client'
 
-import type { ChatMessage } from '@/types/chat'
-import { FiUser } from 'react-icons/fi'
-import { RiRobot2Line } from 'react-icons/ri'
+import { ChatMessage as ChatMessageType } from '@/types/chat'
+import { FiUser, FiCpu } from 'react-icons/fi'
 
-interface Props {
-  message: ChatMessage
+interface ChatMessageProps {
+  message: ChatMessageType
 }
 
-const TypingIndicator = () => (
-  <div className="flex items-center space-x-2">
-    <div className="flex space-x-1">
-      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-      <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-    </div>
-  </div>
-)
-
-export default function ChatMessage({ message }: Props) {
+export default function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user'
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
-      <div className={`flex items-start max-w-[80%] ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-        <div className={`flex-shrink-0 ${isUser ? 'ml-2' : 'mr-2'}`}>
+    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+      <div className={`flex items-start space-x-2 max-w-[80%] ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
+        {/* Avatar */}
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-200
+          ${isUser
+            ? 'bg-blue-500 dark:bg-blue-600 text-white'
+            : 'bg-gray-600 dark:bg-gray-700 text-white'}`}>
           {isUser ? (
-            <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center">
-              <FiUser className="text-white" />
-            </div>
+            <FiUser className="w-4 h-4" />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
-              <RiRobot2Line className="text-white" />
-            </div>
+            <FiCpu className="w-4 h-4" />
           )}
         </div>
-        <div
-          className={`rounded-lg p-3 ${isUser
-            ? 'bg-blue-500 text-white'
-            : 'bg-gray-100 text-gray-900'
-            }`}
-        >
-          {message.isStreaming ? (
-            <>
-              <div className="whitespace-pre-wrap mb-1">{message.content}</div>
-              <TypingIndicator />
-            </>
-          ) : (
-            <div className="whitespace-pre-wrap">{message.content}</div>
-          )}
+
+        {/* Message Content */}
+        <div className={`flex flex-col space-y-1`}>
+          <div className={`px-4 py-3 rounded-2xl text-sm transition-colors duration-200
+            ${isUser
+              ? 'bg-blue-500 dark:bg-blue-600 text-white rounded-br-none'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none'}`}>
+            {message.content.split('\n').map((line, i) => (
+              <p key={i} className={`${line.startsWith('•') ? 'ml-4' : ''} 
+                ${!isUser && line.startsWith('•') ? 'text-gray-700 dark:text-gray-300' : ''}`}>
+                {line}
+              </p>
+            ))}
+          </div>
+          <span className="text-xs text-gray-400 dark:text-gray-500 px-2">
+            {new Date(message.timestamp).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit'
+            })}
+          </span>
         </div>
       </div>
     </div>
