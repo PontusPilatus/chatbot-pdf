@@ -5,6 +5,7 @@ import { FiFile, FiTrash2, FiClock, FiMaximize2 } from 'react-icons/fi'
 import { useFileList } from '../hooks/useFileList'
 import PDFThumbnail from './PDFThumbnail'
 import PDFPreviewModal from './PDFPreviewModal'
+import DeleteFileModal from './DeleteFileModal'
 
 interface FileListProps {
   onFileSelect: (filename: string) => void
@@ -14,6 +15,7 @@ interface FileListProps {
 export default function FileList({ onFileSelect, activeFile }: FileListProps) {
   const { files, isLoading, error, fetchFiles, deleteFile } = useFileList()
   const [previewFile, setPreviewFile] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<{ id: string, name: string } | null>(null)
 
   // Fetch files on mount
   useEffect(() => {
@@ -22,13 +24,22 @@ export default function FileList({ onFileSelect, activeFile }: FileListProps) {
 
   const handleDelete = async (filename: string, e: React.MouseEvent) => {
     e.stopPropagation() // Prevent file selection when clicking delete
-    if (!confirm(`Are you sure you want to delete ${filename}?`)) return
+    setSelectedFile({ id: filename, name: filename })
+  }
 
-    try {
-      await deleteFile(filename)
-    } catch (err) {
-      alert('Failed to delete file')
+  const handleConfirmDelete = async () => {
+    if (selectedFile) {
+      try {
+        await deleteFile(selectedFile.id)
+        setSelectedFile(null)
+      } catch (err) {
+        alert('Failed to delete file')
+      }
     }
+  }
+
+  const handleCancelDelete = () => {
+    setSelectedFile(null)
   }
 
   const formatFileSize = (bytes: number) => {
@@ -132,6 +143,13 @@ export default function FileList({ onFileSelect, activeFile }: FileListProps) {
           onClose={() => setPreviewFile(null)}
         />
       )}
+
+      <DeleteFileModal
+        isOpen={selectedFile !== null}
+        fileName={selectedFile?.name || ''}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   )
 } 
