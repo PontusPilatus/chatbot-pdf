@@ -13,7 +13,7 @@ interface FileUploadProps {
 export default function FileUpload({ onFileProcessed, onSummaryReceived }: FileUploadProps) {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const { fetchFiles } = useFileList();
+  const { fetchFiles, clearCache } = useFileList();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -47,7 +47,8 @@ export default function FileUpload({ onFileProcessed, onSummaryReceived }: FileU
         onSummaryReceived(data.summary);
       }
 
-      // Refresh file list cache
+      // Clear cache and refresh file list
+      clearCache();
       await fetchFiles(true);
 
     } catch (err) {
@@ -55,7 +56,7 @@ export default function FileUpload({ onFileProcessed, onSummaryReceived }: FileU
     } finally {
       setUploading(false);
     }
-  }, [onFileProcessed, onSummaryReceived, fetchFiles]);
+  }, [onFileProcessed, onSummaryReceived, fetchFiles, clearCache]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -89,16 +90,13 @@ export default function FileUpload({ onFileProcessed, onSummaryReceived }: FileU
                 isDragActive ? 'Drop the PDF here...' :
                   'Drop PDF here or click to upload'}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              PDF files only, max 10MB
-            </p>
+            {error && (
+              <p className="text-xs text-red-600 dark:text-red-400 mt-1">
+                {error}
+              </p>
+            )}
           </div>
         </div>
-        {error && (
-          <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-            {error}
-          </p>
-        )}
       </div>
     </div>
   );

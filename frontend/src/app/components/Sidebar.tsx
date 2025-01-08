@@ -25,10 +25,8 @@ interface SidebarProps {
   }) => void
 }
 
-type Tab = 'files' | 'upload' | 'settings' | 'about'
-
 export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived, className = '', onSettingsChange }: SidebarProps) {
-  const [activeTab, setActiveTab] = useState<Tab>('files')
+  const [activeTab, setActiveTab] = useState<'files' | 'settings' | 'about'>('files')
   const { isDarkMode, toggleDarkMode, fontSize, setFontSize } = useTheme()
   const [showTimestamps, setShowTimestamps] = useState(true)
   const [autoDeleteFiles, setAutoDeleteFiles] = useState(false)
@@ -166,8 +164,8 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'files' && (
-          <div className="space-y-4">
-            <div className="p-4">
+          <div className="flex flex-col">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <FileUpload
                 onFileProcessed={onFileProcessed}
                 onSummaryReceived={onSummaryReceived}

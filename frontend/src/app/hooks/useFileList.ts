@@ -53,26 +53,10 @@ export function useFileList() {
     }
   }
 
-  // Load cached data on mount
+  // Clear cache and fetch fresh data on mount
   useEffect(() => {
-    const cachedData = localStorage.getItem(CACHE_KEY)
-    if (cachedData) {
-      try {
-        const data: CacheData = JSON.parse(cachedData)
-        const age = Date.now() - data.timestamp
-
-        // Validate cache version and age
-        if (data.version === CACHE_VERSION && age < CACHE_DURATION) {
-          setFiles(data.files)
-          setIsLoading(false)
-        } else {
-          clearCache() // Clear outdated cache
-        }
-      } catch (err) {
-        console.error('Error parsing cached file list:', err)
-        clearCache()
-      }
-    }
+    clearCache() // Clear cache on mount
+    fetchFiles(true) // Force fresh data fetch
   }, [])
 
   // Fetch fresh data
@@ -122,6 +106,6 @@ export function useFileList() {
     error,
     fetchFiles,
     deleteFile,
-    clearCache // Expose clearCache for manual cache clearing if needed
+    clearCache
   }
 } 

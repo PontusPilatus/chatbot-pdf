@@ -1,7 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { ThemeProvider } from './contexts/ThemeContext'
+import ClientLayout from './ClientLayout'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -38,19 +38,11 @@ export default function RootLayout({
             `,
           }}
         />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-            `,
-          }}
-        />
       </head>
       <body className={`${inter.className} antialiased transition-colors duration-200`}>
-        <ThemeProvider>
+        <ClientLayout>
           {children}
-        </ThemeProvider>
+        </ClientLayout>
       </body>
     </html>
   )

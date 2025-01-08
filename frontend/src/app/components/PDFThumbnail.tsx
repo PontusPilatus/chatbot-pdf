@@ -2,12 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { FiFile } from 'react-icons/fi'
-import Script from 'next/script'
-
-// Use the stable version of PDF.js from CDN
-const PDFJS_VERSION = '3.11.174'
-const PDFJS_URL = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.min.js`
-const WORKER_URL = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.js`
+import { usePDFJS } from '../contexts/PDFJSContext'
 
 interface PDFThumbnailProps {
   url: string
@@ -18,19 +13,33 @@ interface PDFThumbnailProps {
 
 export default function PDFThumbnail({ url, width = 100, onLoadSuccess, onLoadError }: PDFThumbnailProps) {
   const [error, setError] = useState(false)
-  const [pdfJSLoaded, setPdfJSLoaded] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const loadingTaskRef = useRef<any>(null)
+  const renderTaskRef = useRef<any>(null)
+  const { isLoaded } = usePDFJS()
 
   useEffect(() => {
     const loadPDF = async () => {
-      if (!canvasRef.current || !pdfJSLoaded || !window.pdfjsLib) return
+      if (!canvasRef.current || !isLoaded || !window.pdfjsLib) return
+      setIsLoading(true)
 
       try {
-        // Set worker source
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_URL
+        // Cancel any existing loading task
+        if (loadingTaskRef.current) {
+          await loadingTaskRef.current.destroy()
+          loadingTaskRef.current = null
+        }
 
-        const loadingTask = window.pdfjsLib.getDocument(`http://localhost:8000${url}`)
-        const pdf = await loadingTask.promise
+        // Cancel any existing render task
+        if (renderTaskRef.current) {
+          await renderTaskRef.current.cancel()
+          renderTaskRef.current = null
+        }
+
+        // Create new loading task
+        loadingTaskRef.current = window.pdfjsLib.getDocument(`http://localhost:8000${url}`)
+        const pdf = await loadingTaskRef.current.promise
         const page = await pdf.getPage(1)
 
         const viewport = page.getViewport({ scale: 0.5 })
@@ -41,22 +50,50 @@ export default function PDFThumbnail({ url, width = 100, onLoadSuccess, onLoadEr
 
         canvas.height = viewport.height
         canvas.width = viewport.width
+        context.clearRect(0, 0, canvas.width, canvas.height)
 
-        await page.render({
+        const renderTask = page.render({
           canvasContext: context,
           viewport: viewport
-        }).promise
+        })
 
+        renderTaskRef.current = renderTask
+        await renderTask.promise
+        renderTaskRef.current = null
+
+        // Clean up
+        page.cleanup()
+        pdf.destroy()
+        loadingTaskRef.current = null
+        setIsLoading(false)
         onLoadSuccess?.()
       } catch (err) {
-        console.error('Error loading PDF:', err)
-        setError(true)
-        onLoadError?.(err instanceof Error ? err : new Error('Failed to load preview'))
+        if (err?.type !== 'canvas') { // Ignore canvas errors from cancellation
+          console.error('Error loading PDF:', err)
+          setError(true)
+          onLoadError?.(err instanceof Error ? err : new Error('Failed to load preview'))
+        }
+        setIsLoading(false)
       }
     }
 
     loadPDF()
-  }, [url, onLoadSuccess, onLoadError, pdfJSLoaded])
+
+    // Cleanup function
+    return () => {
+      const cleanup = async () => {
+        if (renderTaskRef.current) {
+          await renderTaskRef.current.cancel()
+          renderTaskRef.current = null
+        }
+        if (loadingTaskRef.current) {
+          await loadingTaskRef.current.destroy()
+          loadingTaskRef.current = null
+        }
+      }
+      cleanup()
+    }
+  }, [url, onLoadSuccess, onLoadError, isLoaded])
 
   if (error) {
     return (
@@ -66,19 +103,22 @@ export default function PDFThumbnail({ url, width = 100, onLoadSuccess, onLoadEr
     )
   }
 
-  return (
-    <>
-      <Script
-        src={PDFJS_URL}
-        onLoad={() => setPdfJSLoaded(true)}
-        onError={() => setError(true)}
-      />
-      <div className="relative w-full h-full overflow-hidden">
-        <canvas
-          ref={canvasRef}
-          className="w-full h-full object-contain"
-        />
+  if (isLoading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-800">
+        <div className="w-4 h-4 border-2 border-gray-300 dark:border-gray-600 
+          border-t-blue-500 dark:border-t-blue-400 rounded-full animate-spin">
+        </div>
       </div>
-    </>
+    )
+  }
+
+  return (
+    <div className="relative w-full h-full overflow-hidden">
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full object-contain"
+      />
+    </div>
   )
 } 
