@@ -1,142 +1,134 @@
 'use client'
 
-import React, { useEffect, useState } from 'react';
-import { FiFile, FiTrash2 } from 'react-icons/fi';
+import { useState, useEffect } from 'react'
+import { FiFile, FiTrash2, FiClock } from 'react-icons/fi'
 
 interface FileInfo {
-  filename: string;
-  size: number;
-  created_at: number;
-  last_modified: number;
+  filename: string
+  size: number
+  created_at: number
+  last_modified: number
 }
 
 interface FileListProps {
-  onFileSelect: (filename: string) => void;
-  onFileDelete: (filename: string) => void;
-  activeFile: string | null;
+  onFileSelect: (filename: string) => void
+  activeFile: string | null
 }
 
-export default function FileList({ onFileSelect, onFileDelete, activeFile }: FileListProps) {
-  const [files, setFiles] = useState<FileInfo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function FileList({ onFileSelect, activeFile }: FileListProps) {
+  const [files, setFiles] = useState<FileInfo[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch files on mount
+  useEffect(() => {
+    fetchFiles()
+  }, [])
 
   const fetchFiles = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/files');
-      if (!response.ok) {
-        throw new Error('Failed to fetch files');
-      }
-      const data = await response.json();
-      setFiles(data.files);
-      setError(null);
+      setIsLoading(true)
+      setError(null)
+      const response = await fetch('http://localhost:8000/api/files')
+      if (!response.ok) throw new Error('Failed to fetch files')
+      const data = await response.json()
+      setFiles(data.files)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load files');
+      setError('Failed to load files')
+      console.error(err)
     } finally {
-      setLoading(false);
+      setIsLoading(false)
     }
-  };
-
-  useEffect(() => {
-    fetchFiles();
-  }, []);
+  }
 
   const handleDelete = async (filename: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent file selection when clicking delete
-
-    if (!confirm(`Are you sure you want to delete ${filename}?`)) {
-      return;
-    }
+    e.stopPropagation() // Prevent file selection when clicking delete
+    if (!confirm(`Are you sure you want to delete ${filename}?`)) return
 
     try {
       const response = await fetch(`http://localhost:8000/api/files/${filename}`, {
         method: 'DELETE'
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete file');
-      }
-
-      await fetchFiles(); // Refresh the list
-      onFileDelete(filename);
+      })
+      if (!response.ok) throw new Error('Failed to delete file')
+      await fetchFiles() // Refresh the list
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete file');
+      console.error(err)
+      alert('Failed to delete file')
     }
-  };
+  }
 
-  const formatFileSize = (bytes: number): string => {
-    const units = ['B', 'KB', 'MB', 'GB'];
-    let size = bytes;
-    let unitIndex = 0;
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return bytes + ' B'
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+  }
 
-    while (size >= 1024 && unitIndex < units.length - 1) {
-      size /= 1024;
-      unitIndex++;
-    }
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp * 1000).toLocaleDateString()
+  }
 
-    return `${size.toFixed(1)} ${units[unitIndex]}`;
-  };
-
-  const formatDate = (timestamp: number): string => {
-    return new Date(timestamp * 1000).toLocaleString();
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex justify-center items-center p-4">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      <div className="flex items-center justify-center p-4 text-gray-500 dark:text-gray-400">
+        <div className="w-4 h-4 border-2 border-gray-300 dark:border-gray-600 
+          border-t-blue-500 dark:border-t-blue-400 rounded-full animate-spin mr-2">
+        </div>
+        Loading files...
       </div>
-    );
+    )
   }
 
   if (error) {
     return (
-      <div className="text-red-500 dark:text-red-400 p-4 text-center">
+      <div className="p-4 text-red-500 dark:text-red-400">
         {error}
       </div>
-    );
+    )
   }
 
   if (files.length === 0) {
     return (
-      <div className="text-gray-500 dark:text-gray-400 p-4 text-center">
+      <div className="p-4 text-gray-500 dark:text-gray-400 text-center">
         No files uploaded yet
       </div>
-    );
+    )
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 p-2">
       {files.map((file) => (
         <div
           key={file.filename}
           onClick={() => onFileSelect(file.filename)}
-          className={`flex items-center justify-between p-3 rounded-lg cursor-pointer
+          className={`flex items-start p-3 rounded-lg cursor-pointer group
             ${activeFile === file.filename
-              ? 'bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800'
-              : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'}
-            hover:border-blue-300 dark:hover:border-blue-700 transition-colors`}
+              ? 'bg-blue-50 dark:bg-blue-900/20'
+              : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
         >
-          <div className="flex items-center space-x-3">
-            <FiFile className="text-gray-400 dark:text-gray-500" />
-            <div>
-              <div className="font-medium text-gray-700 dark:text-gray-200">{file.filename}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                {formatFileSize(file.size)} • Uploaded {formatDate(file.created_at)}
-              </div>
+          <FiFile className="w-5 h-5 mt-1 text-blue-500 dark:text-blue-400 flex-shrink-0" />
+          <div className="ml-3 flex-1 min-w-0">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                {file.filename}
+              </p>
+              <button
+                onClick={(e) => handleDelete(file.filename, e)}
+                className="p-1 rounded-lg opacity-0 group-hover:opacity-100
+                  hover:bg-red-50 dark:hover:bg-red-900/20
+                  text-red-500 dark:text-red-400"
+              >
+                <FiTrash2 className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex items-center mt-1 text-xs text-gray-500 dark:text-gray-400 space-x-2">
+              <span>{formatFileSize(file.size)}</span>
+              <span>•</span>
+              <FiClock className="w-3 h-3" />
+              <span>{formatDate(file.last_modified)}</span>
             </div>
           </div>
-
-          <button
-            onClick={(e) => handleDelete(file.filename, e)}
-            className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 
-              rounded-full hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-            title="Delete file"
-          >
-            <FiTrash2 />
-          </button>
         </div>
       ))}
     </div>
-  );
+  )
 } 

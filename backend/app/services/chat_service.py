@@ -8,6 +8,7 @@ import os
 import json
 import tiktoken
 import re
+from langdetect import detect, LangDetectException
 
 logger = logging.getLogger(__name__)
 
@@ -16,14 +17,22 @@ class Message:
         self.role = role
         self.content = content
         self.timestamp = datetime.now()
+        try:
+            self.language = detect(content) if content.strip() else 'en'
+        except LangDetectException:
+            self.language = 'en'
 
 class Conversation:
     def __init__(self, max_messages: int = 10):
         self.messages: List[Message] = []
         self.max_messages = max_messages
+        self.current_language = 'en'
 
     def add_message(self, role: str, content: str):
-        self.messages.append(Message(role, content))
+        message = Message(role, content)
+        self.messages.append(message)
+        if role == 'user':  # Update language only based on user messages
+            self.current_language = message.language
         if len(self.messages) > self.max_messages:
             self.messages.pop(0)
 
@@ -132,15 +141,17 @@ class ChatService:
         self.client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.usage_control = UsageControl()
         self.max_context_tokens = 4000  # Maximum tokens for context (leaving room for response)
-        self.system_prompt = """You are a helpful AI assistant that answers questions about PDF documents.
-        You should:
+        self.system_prompt = """Welcome! I'm your multilingual PDF assistant. Feel free to ask questions in any language you're comfortable with.
+
+        When working with PDFs, I will:
         1. Answer questions based on the provided context from the PDF
-        2. If you don't know the answer or the context doesn't contain relevant information, say so
-        3. Be concise and clear in your responses
-        4. If the context is not relevant to the question, say so
+        2. If I don't know the answer or the context doesn't contain relevant information, I'll say so
+        3. Be concise and clear in my responses
+        4. If the context is not relevant to the question, I'll let you know
         5. Maintain conversation continuity by referring to previous context when relevant
         6. When citing information, mention the page number if available
-        7. Base your answers strictly on the provided context, not on general knowledge
+        7. Base my answers strictly on the provided context, not on general knowledge
+        8. Communicate in your preferred language throughout our conversation
         """
 
     async def get_relevant_context(self, query: str, filename: str, conversation: Conversation) -> str:
@@ -208,12 +219,36 @@ class ChatService:
 
     async def stream_chat(self, query: str, filename: str | None) -> AsyncGenerator[str, None]:
         try:
+            conversation = self._get_or_create_conversation(filename)
+            
+            # Get context from vector store if filename is provided
+            context = ""
+            if filename:
+                context = await self.get_relevant_context(query, filename, conversation)
+
+            # Add the user's message to conversation
+            conversation.add_message("user", query)
+
+            # Prepare the messages for the API
+            messages = [
+                {"role": "system", "content": "You are a helpful assistant. " +
+                 "If context is provided, use it to answer questions accurately."}
+            ]
+
+            if context:
+                messages.append({"role": "system", "content": f"Context from the document:\n{context}"})
+
+            # Add conversation history
+            for msg in conversation.messages[:-1]:  # Exclude the last message as we'll add it separately
+                messages.append({"role": msg.role, "content": msg.content})
+
+            # Add the current query with language instruction
+            messages.append({"role": "user", "content": f"[Respond in {conversation.current_language}]\n{query}"})
+
             # Check rate limit
             if not self.usage_control.check_rate_limit():
                 yield "Rate limit exceeded. Please wait a minute and try again."
                 return
-
-            conversation = self._get_or_create_conversation(filename)
 
             # Handle general questions when no PDF is uploaded
             if not filename:
@@ -297,8 +332,9 @@ class ChatService:
         """Handle general questions about the chatbot."""
         try:
             messages = [
-                {"role": "system", "content": """You are a helpful AI assistant that helps users with PDF documents.
-                When answering general questions about your capabilities, be concise and clear."""},
+                {"role": "system", "content": """Welcome! I'm your multilingual PDF assistant. I can help you understand any PDF document, 
+                and you can chat with me in any language you prefer - whether it's English, Swedish, Spanish, German, Chinese, Arabic, or any other language. 
+                I'll automatically detect your language and respond accordingly. How can I assist you today?"""},
                 {"role": "user", "content": query}
             ]
 
@@ -316,7 +352,7 @@ class ChatService:
 
         except Exception as e:
             logger.error(f"Error in general response: {str(e)}")
-            yield "I'm a PDF chatbot. Upload a PDF file and I'll help you understand its contents."
+            yield "I'm a multilingual PDF chatbot. You can chat with me in any language! Upload a PDF file and I'll help you understand its contents."
 
 # Create a singleton instance
 chat_service = ChatService() 

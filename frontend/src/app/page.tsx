@@ -25,28 +25,40 @@ export default function Home() {
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    // Add welcome message when component mounts
-    const welcomeMessage: ChatMessageType = {
-      id: uuidv4(),
-      role: 'assistant',
-      content: 'Welcome to the PDF Chatbot!\n\n' +
-        '📌 Important Privacy Notice:\n' +
-        '• Avoid uploading PDFs with personal, sensitive, or confidential information\n' +
-        '• Your data is processed locally and not stored permanently\n' +
-        '• This system complies with applicable data protection regulations\n\n' +
-        '🤖 AI Disclaimer:\n' +
-        '• I am an AI assistant striving for accuracy, but my responses might not always be perfect\n' +
-        '• For critical matters, please verify information independently\n\n' +
-        '💡 How to Use Me:\n' +
-        '• Ask general questions about my features before uploading a file\n' +
-        '• Upload a PDF (max size: 10MB) to ask specific questions about its content\n' +
-        '• For best results, use clear and specific questions like:\n' +
-        '  "What is this document about?"\n' +
-        '  "Can you summarize Section 3?"\n\n' +
-        'Let\'s get started! Upload a PDF when you\'re ready or ask me about my features.',
-      timestamp: new Date().toISOString()
-    }
-    setMessages([welcomeMessage])
+    // Add welcome messages sequence when component mounts
+    const welcomeMessages: ChatMessageType[] = [
+      {
+        id: uuidv4(),
+        role: 'assistant',
+        content: '👋 Hi there! I\'m your PDF Chatbot assistant. I can help you understand and interact with your PDF documents through natural conversation!',
+        timestamp: new Date().toISOString()
+      },
+      {
+        id: uuidv4(),
+        role: 'assistant',
+        content: `Here's how to get started:
+
+1️⃣ Upload a PDF using the sidebar
+2️⃣ Ask questions about its content
+3️⃣ Get instant, context-aware responses
+
+💡 Pro tip: Feel free to chat in any language - English, Swedish, Spanish, German, Chinese, Arabic, or any other language! I'll automatically detect and respond in your preferred language.`,
+        timestamp: new Date(Date.now() + 1500).toISOString()
+      },
+      {
+        id: uuidv4(),
+        role: 'assistant',
+        content: 'Ready to begin? Upload a PDF or ask me about my features! 🚀',
+        timestamp: new Date(Date.now() + 3000).toISOString()
+      }
+    ]
+
+    // Add messages with a delay to simulate typing
+    welcomeMessages.forEach((message, index) => {
+      setTimeout(() => {
+        setMessages(prev => [...prev, message])
+      }, index * 1500) // 1.5 second delay between each message
+    })
   }, [])
 
   const scrollToBottom = () => {

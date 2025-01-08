@@ -138,7 +138,7 @@ RATE_LIMIT_PER_MIN=10
 - [x] Add loading states and animations
 - [x] Implement error handling and user feedback
 - [ ] Add mobile responsiveness
-- [ ] Create dark mode support
+- [x] Create dark mode support
 - [ ] Add keyboard shortcuts
 - [ ] Implement session management
 
