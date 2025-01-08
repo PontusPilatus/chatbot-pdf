@@ -1,8 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
-import { FiFile, FiTrash2, FiClock } from 'react-icons/fi'
+import { useEffect, useState } from 'react'
+import { FiFile, FiTrash2, FiClock, FiMaximize2 } from 'react-icons/fi'
 import { useFileList } from '../hooks/useFileList'
+import PDFThumbnail from './PDFThumbnail'
+import PDFPreviewModal from './PDFPreviewModal'
 
 interface FileListProps {
   onFileSelect: (filename: string) => void
@@ -11,6 +13,7 @@ interface FileListProps {
 
 export default function FileList({ onFileSelect, activeFile }: FileListProps) {
   const { files, isLoading, error, fetchFiles, deleteFile } = useFileList()
+  const [previewFile, setPreviewFile] = useState<string | null>(null)
 
   // Fetch files on mount
   useEffect(() => {
@@ -76,20 +79,41 @@ export default function FileList({ onFileSelect, activeFile }: FileListProps) {
               ? 'bg-blue-50 dark:bg-blue-900/20'
               : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
         >
-          <FiFile className="w-5 h-5 mt-1 text-blue-500 dark:text-blue-400 flex-shrink-0" />
+          <div className="w-16 h-20 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+            <PDFThumbnail
+              url={`/api/files/${file.filename}`}
+              width={64}
+            />
+          </div>
+
           <div className="ml-3 flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                 {file.filename}
               </p>
-              <button
-                onClick={(e) => handleDelete(file.filename, e)}
-                className="p-1 rounded-lg opacity-0 group-hover:opacity-100
-                  hover:bg-red-50 dark:hover:bg-red-900/20
-                  text-red-500 dark:text-red-400"
-              >
-                <FiTrash2 className="w-4 h-4" />
-              </button>
+              <div className="flex items-center space-x-1">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setPreviewFile(file.filename)
+                  }}
+                  className="p-1 rounded-lg opacity-0 group-hover:opacity-100
+                    hover:bg-gray-100 dark:hover:bg-gray-700
+                    text-gray-500 dark:text-gray-400"
+                  title="Preview PDF"
+                >
+                  <FiMaximize2 className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={(e) => handleDelete(file.filename, e)}
+                  className="p-1 rounded-lg opacity-0 group-hover:opacity-100
+                    hover:bg-red-50 dark:hover:bg-red-900/20
+                    text-red-500 dark:text-red-400"
+                  title="Delete file"
+                >
+                  <FiTrash2 className="w-4 h-4" />
+                </button>
+              </div>
             </div>
             <div className="flex items-center mt-1 text-xs text-gray-500 dark:text-gray-400 space-x-2">
               <span>{formatFileSize(file.size)}</span>
@@ -100,6 +124,14 @@ export default function FileList({ onFileSelect, activeFile }: FileListProps) {
           </div>
         </div>
       ))}
+
+      {previewFile && (
+        <PDFPreviewModal
+          url={`/api/files/${previewFile}`}
+          filename={previewFile}
+          onClose={() => setPreviewFile(null)}
+        />
+      )}
     </div>
   )
 } 

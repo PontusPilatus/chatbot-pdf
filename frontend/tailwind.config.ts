@@ -13,6 +13,9 @@ export default {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      scale: {
+        '25': '0.25',
+      },
     },
   },
   plugins: [],

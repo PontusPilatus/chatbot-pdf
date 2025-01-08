@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from pathlib import Path
 from app.services.pdf_processor import pdf_processor
 from app.services.vector_store import vector_store
@@ -170,6 +170,39 @@ async def delete_file(filename: str):
         raise
     except Exception as e:
         logger.error(f"Unexpected error deleting {filename}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"An unexpected error occurred: {str(e)}"
+        ) 
+
+@router.get("/files/{filename}")
+async def get_file(filename: str):
+    """Serve a PDF file."""
+    try:
+        file_path = UPLOAD_DIR / filename
+        
+        # Check if file exists
+        if not file_path.exists():
+            raise HTTPException(
+                status_code=404,
+                detail=f"File {filename} not found"
+            )
+            
+        return FileResponse(
+            path=file_path,
+            filename=filename,
+            media_type="application/pdf",
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, OPTIONS",
+                "Access-Control-Allow-Headers": "*",
+            }
+        )
+        
+    except HTTPException as e:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error serving {filename}: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail=f"An unexpected error occurred: {str(e)}"
