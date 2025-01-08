@@ -3,6 +3,7 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FiUploadCloud } from 'react-icons/fi';
+import { useFileList } from '../hooks/useFileList';
 
 interface FileUploadProps {
   onFileProcessed: (filename: string) => void;
@@ -12,6 +13,7 @@ interface FileUploadProps {
 export default function FileUpload({ onFileProcessed, onSummaryReceived }: FileUploadProps) {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const { fetchFiles } = useFileList();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -45,12 +47,15 @@ export default function FileUpload({ onFileProcessed, onSummaryReceived }: FileU
         onSummaryReceived(data.summary);
       }
 
+      // Refresh file list cache
+      await fetchFiles(true);
+
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setUploading(false);
     }
-  }, [onFileProcessed, onSummaryReceived]);
+  }, [onFileProcessed, onSummaryReceived, fetchFiles]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

@@ -1,14 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { FiFile, FiTrash2, FiClock } from 'react-icons/fi'
-
-interface FileInfo {
-  filename: string
-  size: number
-  created_at: number
-  last_modified: number
-}
+import { useFileList } from '../hooks/useFileList'
 
 interface FileListProps {
   onFileSelect: (filename: string) => void
@@ -16,43 +10,20 @@ interface FileListProps {
 }
 
 export default function FileList({ onFileSelect, activeFile }: FileListProps) {
-  const [files, setFiles] = useState<FileInfo[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { files, isLoading, error, fetchFiles, deleteFile } = useFileList()
 
   // Fetch files on mount
   useEffect(() => {
     fetchFiles()
   }, [])
 
-  const fetchFiles = async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      const response = await fetch('http://localhost:8000/api/files')
-      if (!response.ok) throw new Error('Failed to fetch files')
-      const data = await response.json()
-      setFiles(data.files)
-    } catch (err) {
-      setError('Failed to load files')
-      console.error(err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const handleDelete = async (filename: string, e: React.MouseEvent) => {
     e.stopPropagation() // Prevent file selection when clicking delete
     if (!confirm(`Are you sure you want to delete ${filename}?`)) return
 
     try {
-      const response = await fetch(`http://localhost:8000/api/files/${filename}`, {
-        method: 'DELETE'
-      })
-      if (!response.ok) throw new Error('Failed to delete file')
-      await fetchFiles() // Refresh the list
+      await deleteFile(filename)
     } catch (err) {
-      console.error(err)
       alert('Failed to delete file')
     }
   }

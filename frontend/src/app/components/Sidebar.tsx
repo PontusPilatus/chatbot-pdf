@@ -212,7 +212,7 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
                       <FiSun className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                     )}
                     <span className="text-sm text-gray-700 dark:text-gray-300">
-                      Dark Mode
+                      {isDarkMode ? 'Light Mode' : 'Dark Mode'}
                     </span>
                   </div>
                   <button

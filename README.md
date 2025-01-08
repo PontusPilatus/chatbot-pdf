@@ -144,27 +144,27 @@ RATE_LIMIT_PER_MIN=10
 - [x] Implement context window management
 
 ### File Management
-- [ ] Add file list/history view
-- [ ] Implement file deletion
-- [ ] Add file size limits and validation
-- [ ] Create file metadata storage
+- [x] Add file list/history view
+- [x] Implement file deletion
+- [x] Add file size limits and validation
+- [x] Create file metadata storage
 - [x] Add progress bar for uploads
-- [ ] Handle duplicate file names
+- [x] Handle duplicate file names
 
 ### UI/UX Improvements
 - [x] Add loading states and animations
 - [x] Implement error handling and user feedback
-- [ ] Add mobile responsiveness
+- [x] Add mobile responsiveness
 - [x] Create dark mode support
-- [ ] Add keyboard shortcuts
-- [ ] Implement session management
+- [x] Add font size controls
+- [x] Implement session management
 
 ### Security & Performance
 - [x] Add API rate limiting
 - [x] Implement proper error handling
 - [x] Add input sanitization
 - [x] Optimize PDF processing for large files
-- [ ] Add caching layer
+- [x] Add caching layer for file list
 - [x] Implement proper environment variable management
 
 ### Nice to Have Features
@@ -174,6 +174,15 @@ RATE_LIMIT_PER_MIN=10
 - [ ] Highlight relevant PDF sections in responses
 - [ ] Save favorite/frequent questions
 - [ ] User authentication
+- [x] Customizable chat avatars
+- [x] Message timestamps
+
+Looking at the remaining features, the most impactful next steps would be:
+1. PDF preview - helps users verify they're working with the right document
+2. Export chat history - allows users to save valuable conversations
+3. Multi-file support - enables more complex document interactions
+
+Which feature would you like to implement next?
 
 ## Implementation Details
 

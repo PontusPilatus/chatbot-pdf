@@ -5,12 +5,13 @@ import ChatMessage from './components/ChatMessage'
 import { ChatMessage as ChatMessageType } from '@/types/chat'
 import { v4 as uuidv4 } from 'uuid'
 import Sidebar from './components/Sidebar'
-import { FiSend } from 'react-icons/fi'
+import { FiSend, FiDownload } from 'react-icons/fi'
 import { RiAiGenerate, RiRobotFill, RiOpenaiFill, RiRobot2Fill, RiMindMap } from 'react-icons/ri'
 import { HiSparkles, HiLightBulb } from 'react-icons/hi'
 import { BiBrain } from 'react-icons/bi'
 import { TbBrain, TbRobot } from 'react-icons/tb'
 import { IoExtensionPuzzle } from 'react-icons/io5'
+import { convertToMarkdown, downloadMarkdown } from '@/utils/exportChat'
 
 const BotAvatars = {
   RiAiGenerate,
@@ -248,6 +249,18 @@ export default function Home() {
               'General Chat'
             )}
           </h2>
+          <button
+            onClick={() => {
+              const content = convertToMarkdown(messages, activePDF)
+              const filename = `pdf-pal-chat-${new Date().toISOString().split('T')[0]}.md`
+              downloadMarkdown(content, filename)
+            }}
+            className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg
+              transition-colors duration-200"
+            title="Export chat"
+          >
+            <FiDownload className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Messages */}
