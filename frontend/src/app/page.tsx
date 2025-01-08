@@ -51,7 +51,7 @@ export default function Home() {
       {
         id: uuidv4(),
         role: 'assistant',
-        content: '👋 Hi there! I\'m your PDF Chatbot assistant. I can help you understand and interact with your PDF documents through natural conversation!',
+        content: '👋 Hi there! I\'m PDF Pal, your friendly document companion. I can help you understand and interact with your PDF documents through natural conversation!',
         timestamp: new Date().toISOString()
       },
       {

@@ -79,11 +79,15 @@ export default function ChatMessage({ message, showTimestamp = true, selectedAva
         </div>
 
         {/* Message Content */}
-        <div className={`flex flex-col space-y-1`}>
-          <div className={`px-4 py-3 rounded-2xl text-sm transition-colors duration-200
-            ${isUser
-              ? 'bg-blue-500 dark:bg-blue-600 text-white rounded-br-none'
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none'}`}>
+        <div className={`flex flex-col space-y-1 ${isUser ? 'items-end' : 'items-start'}`}>
+          {/* Message Bubble */}
+          <div
+            style={{ fontSize: 'var(--chat-font-size)' }}
+            className={`px-4 py-3 rounded-2xl break-words transition-colors duration-200
+              ${isUser
+                ? 'bg-blue-500 dark:bg-blue-600 text-white rounded-br-none'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none'}`}
+          >
             {message.content.split('\n').map((line, i) => (
               <p key={i} className={`${line.startsWith('•') ? 'ml-4' : ''} 
                 ${!isUser && line.startsWith('•') ? 'text-gray-700 dark:text-gray-300' : ''}`}>
@@ -91,7 +95,9 @@ export default function ChatMessage({ message, showTimestamp = true, selectedAva
               </p>
             ))}
           </div>
-          {showTimestamp && (
+
+          {/* Timestamp */}
+          {showTimestamp && message.timestamp && (
             <span className="text-xs text-gray-400 dark:text-gray-500 px-2">
               {new Date(message.timestamp).toLocaleTimeString([], {
                 hour: '2-digit',

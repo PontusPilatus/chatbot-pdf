@@ -29,7 +29,7 @@ type Tab = 'files' | 'upload' | 'settings' | 'about'
 
 export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived, className = '', onSettingsChange }: SidebarProps) {
   const [activeTab, setActiveTab] = useState<Tab>('files')
-  const { isDarkMode, toggleDarkMode } = useTheme()
+  const { isDarkMode, toggleDarkMode, fontSize, setFontSize } = useTheme()
   const [showTimestamps, setShowTimestamps] = useState(true)
   const [autoDeleteFiles, setAutoDeleteFiles] = useState(false)
   const [selectedAvatar, setSelectedAvatar] = useState('TbRobot')
@@ -126,7 +126,7 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
     <div className={`w-80 border-r border-gray-200 dark:border-gray-700 flex flex-col ${className}`}>
       {/* Sidebar Header */}
       <div className="h-16 border-b border-gray-200 dark:border-gray-700 flex items-center px-4">
-        <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-200">PDF Chatbot</h1>
+        <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-200">PDF Pal</h1>
       </div>
 
       {/* Navigation Tabs */}
@@ -227,6 +227,52 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
                         ${isDarkMode ? 'translate-x-6' : 'translate-x-1'}`}
                     />
                   </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Text Size */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                Text Size
+              </h3>
+              <div className="space-y-3">
+                <div className="flex flex-col space-y-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700 dark:text-gray-300">
+                      Font Size: {fontSize}px
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => setFontSize(Math.max(12, fontSize - 1))}
+                        className="p-2 rounded-lg bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 
+                          hover:bg-gray-100 dark:hover:bg-gray-600
+                          border border-gray-200 dark:border-gray-600"
+                      >
+                        -
+                      </button>
+                      <button
+                        onClick={() => setFontSize(Math.min(24, fontSize + 1))}
+                        className="p-2 rounded-lg bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 
+                          hover:bg-gray-100 dark:hover:bg-gray-600
+                          border border-gray-200 dark:border-gray-600"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min="12"
+                    max="24"
+                    value={fontSize}
+                    onChange={(e) => setFontSize(parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                    <span>Small</span>
+                    <span>Large</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -411,31 +457,16 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
                 </div>
               </div>
             </div>
-
-            {/* Coming Soon Section */}
-            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <div className="flex items-start space-x-3">
-                <FiInfo className="w-5 h-5 text-blue-500 dark:text-blue-400 mt-0.5" />
-                <div className="flex-1">
-                  <h4 className="text-sm font-medium text-blue-800 dark:text-blue-300">
-                    More Settings Coming Soon
-                  </h4>
-                  <p className="text-sm text-blue-600 dark:text-blue-400 mt-1">
-                    We're working on adding more customization options, including PDF preview settings, chat history management, and keyboard shortcuts.
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         )}
         {activeTab === 'about' && (
           <div className="p-4 space-y-6">
             <div>
               <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                About PDF Chatbot
+                About PDF Pal
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                An intelligent chatbot designed to help you interact with and understand PDF documents through natural conversation.
+                An intelligent companion designed to help you interact with and understand PDF documents through natural conversation.
               </p>
             </div>
 
@@ -485,20 +516,6 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
                   <span>ChromaDB for efficient document storage</span>
                 </li>
               </ul>
-            </div>
-
-            <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                <span>Version 1.0.0</span>
-                <a
-                  href="https://github.com/yourusername/pdf-chatbot"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-blue-500 dark:hover:text-blue-400"
-                >
-                  View on GitHub
-                </a>
-              </div>
             </div>
           </div>
         )}

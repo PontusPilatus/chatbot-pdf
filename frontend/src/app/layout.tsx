@@ -6,7 +6,7 @@ import { ThemeProvider } from './contexts/ThemeContext'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'PDF Chatbot',
+  title: 'PDF Pal',
   description: 'Chat with your PDF documents using AI',
 }
 

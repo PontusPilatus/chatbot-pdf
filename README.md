@@ -1,6 +1,6 @@
-# PDF Chatbot
+# PDF Pal
 
-An AI-powered chatbot that can answer questions about PDF documents. Built with Next.js, TypeScript, Python, and FastAPI.
+An AI-powered companion that can answer questions about PDF documents. Built with Next.js, TypeScript, Python, and FastAPI.
 
 ## Features
 
@@ -101,12 +101,29 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
 ### Backend (.env)
+Create a `.env` file in the backend directory with the following variables:
 ```
 OPENAI_API_KEY=your_openai_api_key
 MAX_DAILY_COST=1.0
+MAX_MONTHLY_COST=20.0
 MAX_TOKENS_PER_REQUEST=2000
 RATE_LIMIT_PER_MIN=10
 ```
+
+> **Important**: Never commit your actual API keys to version control. The values above are just examples.
+
+## Security Notes
+
+1. Environment Variables:
+   - Create a `.env` file in the backend directory
+   - Add your OpenAI API key and other configuration
+   - The `.env` file is automatically ignored by git for security
+   - Use `.env.example` as a template
+
+2. API Keys:
+   - Get your OpenAI API key from: https://platform.openai.com/account/api-keys
+   - Keep your API keys secure and never commit them to version control
+   - Consider using environment variables in production
 
 ## Project Roadmap
 
