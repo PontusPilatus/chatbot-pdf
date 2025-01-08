@@ -6,13 +6,32 @@ import { ChatMessage as ChatMessageType } from '@/types/chat'
 import { v4 as uuidv4 } from 'uuid'
 import Sidebar from './components/Sidebar'
 import { FiSend } from 'react-icons/fi'
+import { RiAiGenerate, RiRobotFill, RiOpenaiFill, RiRobot2Fill, RiMindMap } from 'react-icons/ri'
+import { HiSparkles, HiLightBulb } from 'react-icons/hi'
+import { BiBrain } from 'react-icons/bi'
+import { TbBrain, TbRobot } from 'react-icons/tb'
+import { IoExtensionPuzzle } from 'react-icons/io5'
+
+const BotAvatars = {
+  RiAiGenerate,
+  RiRobotFill,
+  RiRobot2Fill,
+  TbRobot,
+  HiSparkles,
+  BiBrain,
+  TbBrain,
+  RiMindMap,
+  HiLightBulb,
+  IoExtensionPuzzle,
+  RiOpenaiFill,
+}
 
 const TypingIndicator = () => (
   <div className="flex items-center space-x-2 p-2">
     <div className="flex space-x-1">
-      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+      <div className="w-1.5 h-1.5 bg-gray-600 dark:bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+      <div className="w-1.5 h-1.5 bg-gray-600 dark:bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+      <div className="w-1.5 h-1.5 bg-gray-600 dark:bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
     </div>
   </div>
 )
@@ -22,6 +41,8 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [inputMessage, setInputMessage] = useState('')
   const [activePDF, setActivePDF] = useState<string | null>(null)
+  const [showTimestamps, setShowTimestamps] = useState(true)
+  const [selectedAvatar, setSelectedAvatar] = useState('RiAiGenerate')
   const chatContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -207,6 +228,10 @@ export default function Home() {
         onFileProcessed={handleFileProcessed}
         onSummaryReceived={handleSummaryReceived}
         className="h-screen"
+        onSettingsChange={(settings) => {
+          setShowTimestamps(settings.showTimestamps)
+          setSelectedAvatar(settings.selectedAvatar)
+        }}
       />
 
       {/* Chat Area */}
@@ -234,13 +259,32 @@ export default function Home() {
             {messages.map(message => (
               message.isStreaming ? (
                 <div key={message.id} className="flex justify-start">
-                  <div className="bg-gray-50 dark:bg-gray-700 rounded-2xl p-2 shadow-sm max-w-[80%] 
-                    border border-gray-100 dark:border-gray-600">
-                    <TypingIndicator />
+                  <div className="flex items-end space-x-2 max-w-[80%]">
+                    {/* Avatar */}
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 
+                      bg-gray-600 dark:bg-gray-700 text-white">
+                      {(() => {
+                        const BotIcon = BotAvatars[selectedAvatar as keyof typeof BotAvatars] || RiAiGenerate
+                        return <BotIcon className="w-5 h-5" />
+                      })()}
+                    </div>
+
+                    {/* Typing Indicator */}
+                    <div className="flex flex-col space-y-1">
+                      <div className="px-4 py-3 rounded-2xl text-sm 
+                        bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none">
+                        <TypingIndicator />
+                      </div>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <ChatMessage key={message.id} message={message} />
+                <ChatMessage
+                  key={message.id}
+                  message={message}
+                  showTimestamp={showTimestamps}
+                  selectedAvatar={selectedAvatar}
+                />
               )
             ))}
             {isLoading && (

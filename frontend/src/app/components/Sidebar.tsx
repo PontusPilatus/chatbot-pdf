@@ -1,41 +1,125 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import FileUpload from './FileUpload'
 import FileList from './FileList'
 import { useTheme } from '../contexts/ThemeContext'
-import { FiUpload, FiList, FiSettings, FiInfo, FiSun, FiMoon, FiClock, FiTrash2, FiGlobe } from 'react-icons/fi'
+import { FiUser, FiUpload, FiList, FiSettings, FiInfo, FiSun, FiMoon, FiClock, FiTrash2, FiGlobe, FiChevronDown } from 'react-icons/fi'
+import { RiRobotFill, RiOpenaiFill, RiRobot2Fill, RiRobotLine, RiAliensFill, RiSpaceShipFill, RiUserSmileLine, RiUserHeartLine, RiUserStarLine, RiUserSettingsLine, RiUserSearchLine, RiUserLocationLine, RiUserFollowLine, RiUserSharedLine, RiUserVoiceLine, RiEarthLine } from 'react-icons/ri'
+import { HiSparkles } from 'react-icons/hi'
+import { BiBrain, BiUserCircle, BiUserPin, BiUserCheck } from 'react-icons/bi'
+import { TbBrain, TbRobot } from 'react-icons/tb'
+import { IoRocketSharp } from 'react-icons/io5'
+import { GiBrain, GiRobotGolem, GiArtificialIntelligence, GiCyberEye, GiRobotAntennas } from 'react-icons/gi'
 
 interface SidebarProps {
   activePDF: string | null
   onFileProcessed: (filename: string) => void
   onSummaryReceived: (summary: string) => void
   className?: string
-  onLanguageChange?: (language: string) => void
+  onSettingsChange?: (settings: {
+    showTimestamps: boolean,
+    autoDeleteFiles: boolean,
+    selectedAvatar: string,
+    selectedUserAvatar: string
+  }) => void
 }
 
 type Tab = 'files' | 'upload' | 'settings' | 'about'
 
-export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived, className = '', onLanguageChange }: SidebarProps) {
+export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived, className = '', onSettingsChange }: SidebarProps) {
   const [activeTab, setActiveTab] = useState<Tab>('files')
   const { isDarkMode, toggleDarkMode } = useTheme()
+  const [showTimestamps, setShowTimestamps] = useState(true)
+  const [autoDeleteFiles, setAutoDeleteFiles] = useState(false)
+  const [selectedAvatar, setSelectedAvatar] = useState('TbRobot')
+  const [selectedUserAvatar, setSelectedUserAvatar] = useState('FiUser')
+  const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false)
+  const [isUserAvatarDropdownOpen, setIsUserAvatarDropdownOpen] = useState(false)
+  const avatarDropdownRef = useRef<HTMLDivElement>(null)
+  const userAvatarDropdownRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (avatarDropdownRef.current && !avatarDropdownRef.current.contains(event.target as Node)) {
+        setIsAvatarDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const handleFileSelect = (filename: string) => {
     onFileProcessed(filename)
   }
 
-  const languages = [
-    { code: 'en', name: 'English' },
-    { code: 'es', name: 'Español' },
-    { code: 'fr', name: 'Français' },
-    { code: 'de', name: 'Deutsch' },
-    { code: 'it', name: 'Italiano' },
-    { code: 'pt', name: 'Português' },
-    { code: 'nl', name: 'Nederlands' },
-    { code: 'ru', name: 'Русский' },
-    { code: 'zh', name: '中文' },
-    { code: 'ja', name: '日本語' },
-    { code: 'ko', name: '한국어' },
+  // Update parent component when settings change
+  const updateShowTimestamps = (value: boolean) => {
+    setShowTimestamps(value)
+    onSettingsChange?.({ showTimestamps: value, autoDeleteFiles, selectedAvatar, selectedUserAvatar })
+  }
+
+  const updateAutoDeleteFiles = (value: boolean) => {
+    setAutoDeleteFiles(value)
+    onSettingsChange?.({ showTimestamps, autoDeleteFiles: value, selectedAvatar, selectedUserAvatar })
+  }
+
+  const updateSelectedAvatar = (value: string) => {
+    setSelectedAvatar(value)
+    onSettingsChange?.({ showTimestamps, autoDeleteFiles, selectedAvatar: value, selectedUserAvatar })
+  }
+
+  const updateSelectedUserAvatar = (value: string) => {
+    setSelectedUserAvatar(value)
+    onSettingsChange?.({ showTimestamps, autoDeleteFiles, selectedAvatar, selectedUserAvatar: value })
+  }
+
+  const botAvatarOptions = [
+    // Row 1: Robots
+    { id: 'TbRobot', name: 'Robot 3', icon: TbRobot },
+    { id: 'RiRobotFill', name: 'Robot', icon: RiRobotFill },
+    { id: 'RiRobot2Fill', name: 'Robot 2', icon: RiRobot2Fill },
+    { id: 'RiRobotLine', name: 'Robot 4', icon: RiRobotLine },
+    // Row 2: Special Robots
+    { id: 'GiRobotAntennas', name: 'Bot Friend', icon: GiRobotAntennas },
+    { id: 'GiRobotGolem', name: 'Robot Golem', icon: GiRobotGolem },
+    { id: 'RiAliensFill', name: 'Alien Bot', icon: RiAliensFill },
+    { id: 'RiSpaceShipFill', name: 'Space Bot', icon: RiSpaceShipFill },
+    // Row 3: Brains & AI
+    { id: 'BiBrain', name: 'Brain', icon: BiBrain },
+    { id: 'TbBrain', name: 'Brain 2', icon: TbBrain },
+    { id: 'GiBrain', name: 'Brain 3', icon: GiBrain },
+    { id: 'GiArtificialIntelligence', name: 'AI Brain', icon: GiArtificialIntelligence },
+    // Row 4: Special Effects
+    { id: 'HiSparkles', name: 'Sparkles', icon: HiSparkles },
+    { id: 'GiCyberEye', name: 'Cyber Eye', icon: GiCyberEye },
+    { id: 'IoRocketSharp', name: 'Rocket', icon: IoRocketSharp },
+    { id: 'RiOpenaiFill', name: 'Minimal', icon: RiOpenaiFill },
+  ]
+
+  const userAvatarOptions = [
+    // Row 1: Basic Users
+    { id: 'FiUser', name: 'Default User', icon: FiUser },
+    { id: 'BiUserCircle', name: 'Circle User', icon: BiUserCircle },
+    { id: 'RiUserSmileLine', name: 'Happy User', icon: RiUserSmileLine },
+    { id: 'RiUserHeartLine', name: 'Friendly User', icon: RiUserHeartLine },
+    // Row 2: Special Users
+    { id: 'RiUserStarLine', name: 'Star User', icon: RiUserStarLine },
+    { id: 'RiUserVoiceLine', name: 'Voice User', icon: RiUserVoiceLine },
+    { id: 'RiUserSettingsLine', name: 'Tech User', icon: RiUserSettingsLine },
+    { id: 'RiUserSearchLine', name: 'Explorer User', icon: RiUserSearchLine },
+    // Row 3: Action Users
+    { id: 'RiUserLocationLine', name: 'Location User', icon: RiUserLocationLine },
+    { id: 'RiUserFollowLine', name: 'Follow User', icon: RiUserFollowLine },
+    { id: 'RiUserSharedLine', name: 'Shared User', icon: RiUserSharedLine },
+    { id: 'BiUserPin', name: 'Pin User', icon: BiUserPin },
+    // Row 4: Special Effects
+    { id: 'BiUserCheck', name: 'Verified User', icon: BiUserCheck },
+    { id: 'RiEarthLine', name: 'Global User', icon: RiEarthLine },
+    { id: 'FiGlobe', name: 'World User', icon: FiGlobe },
+    { id: 'HiSparkles', name: 'Sparkle User', icon: HiSparkles },
   ]
 
   return (
@@ -153,27 +237,120 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
                 Chat Settings
               </h3>
               <div className="space-y-3">
-                {/* Language Selection */}
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <FiGlobe className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      Response Language
-                    </span>
+                {/* Avatar Selection */}
+                <div className="flex flex-col space-y-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      {(() => {
+                        const Icon = botAvatarOptions.find(opt => opt.id === selectedAvatar)?.icon || TbRobot
+                        return <Icon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                      })()}
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        Bot Avatar
+                      </span>
+                    </div>
+                    <div className="relative group" ref={avatarDropdownRef}>
+                      <button
+                        className="p-2 rounded-lg flex items-center justify-center
+                          bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 
+                          hover:bg-gray-100 dark:hover:bg-gray-600
+                          border border-gray-200 dark:border-gray-600"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setIsAvatarDropdownOpen(!isAvatarDropdownOpen)
+                        }}
+                      >
+                        <FiChevronDown className="w-4 h-4" />
+                      </button>
+                      {isAvatarDropdownOpen && (
+                        <div
+                          className="absolute right-0 mt-2 p-2 bg-white dark:bg-gray-700 rounded-lg shadow-lg
+                            border border-gray-200 dark:border-gray-600 z-50"
+                          style={{ width: '256px' }} // 4 icons * (48px + gap) per row
+                        >
+                          <div className="grid grid-cols-4 gap-2">
+                            {botAvatarOptions.map((option) => {
+                              const Icon = option.icon
+                              return (
+                                <button
+                                  key={option.id}
+                                  onClick={() => {
+                                    updateSelectedAvatar(option.id)
+                                    setIsAvatarDropdownOpen(false)
+                                  }}
+                                  className={`p-2 rounded-lg flex items-center justify-center transition-colors duration-200
+                                    ${selectedAvatar === option.id
+                                      ? 'bg-blue-500 text-white'
+                                      : 'bg-gray-50 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500'}`}
+                                  title={option.name}
+                                >
+                                  <Icon className="w-5 h-5" />
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <select
-                    onChange={(e) => onLanguageChange?.(e.target.value)}
-                    className="px-2 py-1 text-sm bg-white dark:bg-gray-700 border border-gray-200 
-                      dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300
-                      focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
-                    defaultValue="en"
-                  >
-                    {languages.map(lang => (
-                      <option key={lang.code} value={lang.code}>
-                        {lang.name}
-                      </option>
-                    ))}
-                  </select>
+                </div>
+
+                {/* User Avatar Selection */}
+                <div className="flex flex-col space-y-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      {(() => {
+                        const Icon = userAvatarOptions.find(opt => opt.id === selectedUserAvatar)?.icon || FiUser
+                        return <Icon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                      })()}
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        User Avatar
+                      </span>
+                    </div>
+                    <div className="relative group" ref={userAvatarDropdownRef}>
+                      <button
+                        className="p-2 rounded-lg flex items-center justify-center
+                          bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 
+                          hover:bg-gray-100 dark:hover:bg-gray-600
+                          border border-gray-200 dark:border-gray-600"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setIsUserAvatarDropdownOpen(!isUserAvatarDropdownOpen)
+                        }}
+                      >
+                        <FiChevronDown className="w-4 h-4" />
+                      </button>
+                      {isUserAvatarDropdownOpen && (
+                        <div
+                          className="absolute right-0 mt-2 p-2 bg-white dark:bg-gray-700 rounded-lg shadow-lg
+                            border border-gray-200 dark:border-gray-600 z-50"
+                          style={{ width: '256px' }}
+                        >
+                          <div className="grid grid-cols-4 gap-2">
+                            {userAvatarOptions.map((option) => {
+                              const Icon = option.icon
+                              return (
+                                <button
+                                  key={option.id}
+                                  onClick={() => {
+                                    updateSelectedUserAvatar(option.id)
+                                    setIsUserAvatarDropdownOpen(false)
+                                  }}
+                                  className={`p-2 rounded-lg flex items-center justify-center transition-colors duration-200
+                                    ${selectedUserAvatar === option.id
+                                      ? 'bg-blue-500 text-white'
+                                      : 'bg-gray-50 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500'}`}
+                                  title={option.name}
+                                >
+                                  <Icon className="w-5 h-5" />
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Message Display */}
@@ -185,10 +362,16 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
                     </span>
                   </div>
                   <button
+                    onClick={() => updateShowTimestamps(!showTimestamps)}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full
-                      bg-gray-200 dark:bg-gray-700 transition-colors duration-200 ease-in-out`}
+                      transition-colors duration-200 ease-in-out focus:outline-none
+                      ${showTimestamps ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'}`}
                   >
-                    <span className="inline-block h-4 w-4 transform rounded-full bg-white shadow translate-x-1" />
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow
+                        transition-transform duration-200 ease-in-out
+                        ${showTimestamps ? 'translate-x-6' : 'translate-x-1'}`}
+                    />
                   </button>
                 </div>
               </div>
@@ -214,10 +397,16 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
                     </div>
                   </div>
                   <button
+                    onClick={() => updateAutoDeleteFiles(!autoDeleteFiles)}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full
-                      bg-gray-200 dark:bg-gray-700 transition-colors duration-200 ease-in-out`}
+                      transition-colors duration-200 ease-in-out focus:outline-none
+                      ${autoDeleteFiles ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'}`}
                   >
-                    <span className="inline-block h-4 w-4 transform rounded-full bg-white shadow translate-x-1" />
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow
+                        transition-transform duration-200 ease-in-out
+                        ${autoDeleteFiles ? 'translate-x-6' : 'translate-x-1'}`}
+                    />
                   </button>
                 </div>
               </div>
