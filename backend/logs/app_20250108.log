@@ -1,0 +1,35 @@
+Error getting context: name 'PDFProcessor' is not defined
+Error getting context: name 'PDFProcessor' is not defined
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 429 Too Many Requests"
+Retrying request to /embeddings in 0.974762 seconds
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 429 Too Many Requests"
+Retrying request to /embeddings in 1.945295 seconds
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 429 Too Many Requests"
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 429 Too Many Requests"
+Retrying request to /embeddings in 0.860842 seconds
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 429 Too Many Requests"
+Retrying request to /embeddings in 1.620824 seconds
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 429 Too Many Requests"
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 429 Too Many Requests"
+Retrying request to /embeddings in 0.753267 seconds
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 429 Too Many Requests"
+Retrying request to /embeddings in 1.927334 seconds
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 429 Too Many Requests"
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 429 Too Many Requests"
+Retrying request to /embeddings in 0.844480 seconds
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 429 Too Many Requests"
+Retrying request to /embeddings in 1.719757 seconds
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 429 Too Many Requests"
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Number of requested results 5 is greater than number of elements in index 4, updating n_results = 4
+HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Number of requested results 5 is greater than number of elements in index 4, updating n_results = 4
+HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
+Number of requested results 5 is greater than number of elements in index 4, updating n_results = 4
+HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+Upload started for file: Opponering av Pontus Paulsson.pdf
+File saved: app\uploads\Opponering av Pontus Paulsson.pdf
+Failed to process PDF Opponering av Pontus Paulsson.pdf: not all arguments converted during string formatting

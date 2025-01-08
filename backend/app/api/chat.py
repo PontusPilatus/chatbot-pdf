@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from services.chat_service import chat_service
+from app.services.chat_service import chat_service
 import json
 
 router = APIRouter()

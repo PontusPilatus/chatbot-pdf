@@ -27,14 +27,15 @@ export default function FileUpload({ onFileProcessed, onSummaryReceived }: FileU
     try {
       const response = await fetch('http://localhost:8000/api/upload', {
         method: 'POST',
-        body: formData,
+        body: formData
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.detail || 'Upload failed');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Upload failed');
       }
+
+      const data = await response.json();
 
       // Handle successful upload
       onFileProcessed(file.name);
