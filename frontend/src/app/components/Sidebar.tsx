@@ -130,7 +130,7 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
       </div>
 
       {/* Navigation Tabs */}
-      <div className="grid grid-cols-4 gap-1 p-2 bg-gray-50 dark:bg-gray-800/50">
+      <div className="grid grid-cols-3 gap-1 p-2 bg-gray-50 dark:bg-gray-800/50">
         <button
           onClick={() => setActiveTab('files')}
           className={`flex flex-col items-center p-2 rounded-lg text-sm
@@ -140,16 +140,6 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
         >
           <FiList className="w-5 h-5 mb-1" />
           Files
-        </button>
-        <button
-          onClick={() => setActiveTab('upload')}
-          className={`flex flex-col items-center p-2 rounded-lg text-sm
-            ${activeTab === 'upload'
-              ? 'bg-white dark:bg-gray-800 text-blue-500 dark:text-blue-400 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-800/50'}`}
-        >
-          <FiUpload className="w-5 h-5 mb-1" />
-          Upload
         </button>
         <button
           onClick={() => setActiveTab('settings')}
@@ -176,16 +166,16 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'files' && (
-          <FileList
-            onFileSelect={handleFileSelect}
-            activeFile={activePDF}
-          />
-        )}
-        {activeTab === 'upload' && (
-          <div className="p-4">
-            <FileUpload
-              onFileProcessed={onFileProcessed}
-              onSummaryReceived={onSummaryReceived}
+          <div className="space-y-4">
+            <div className="p-4">
+              <FileUpload
+                onFileProcessed={onFileProcessed}
+                onSummaryReceived={onSummaryReceived}
+              />
+            </div>
+            <FileList
+              onFileSelect={handleFileSelect}
+              activeFile={activePDF}
             />
           </div>
         )}

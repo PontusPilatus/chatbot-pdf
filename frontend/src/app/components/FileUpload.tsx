@@ -66,10 +66,10 @@ export default function FileUpload({ onFileProcessed, onSummaryReceived }: FileU
   });
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full">
       <div
         {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer
+        className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer
           ${isDragActive
             ? 'border-blue-500 bg-blue-50 dark:border-blue-400 dark:bg-blue-900/30'
             : 'border-gray-300 dark:border-gray-600'}
@@ -81,15 +81,19 @@ export default function FileUpload({ onFileProcessed, onSummaryReceived }: FileU
           transition-colors`}
       >
         <input {...getInputProps()} />
-        <FiUploadCloud className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-          {uploading ? 'Uploading...' :
-            isDragActive ? 'Drop the PDF here...' :
-              'Drag & drop a PDF file here, or click to select'}
-        </p>
-        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-          Only PDF files are supported (max 10MB)
-        </p>
+        <div className="flex items-center justify-center space-x-3">
+          <FiUploadCloud className="h-6 w-6 text-gray-400 dark:text-gray-500" />
+          <div className="text-left">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              {uploading ? 'Uploading...' :
+                isDragActive ? 'Drop the PDF here...' :
+                  'Drop PDF here or click to upload'}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              PDF files only, max 10MB
+            </p>
+          </div>
+        </div>
         {error && (
           <p className="mt-2 text-sm text-red-600 dark:text-red-400">
             {error}
