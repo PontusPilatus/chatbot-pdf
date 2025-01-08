@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import FileUpload from './FileUpload'
 import FileList from './FileList'
 import { useTheme } from '../contexts/ThemeContext'
+import { useFileList } from '../hooks/useFileList'
 import { FiUser, FiUpload, FiList, FiSettings, FiInfo, FiSun, FiMoon, FiClock, FiTrash2, FiGlobe, FiChevronDown } from 'react-icons/fi'
 import { RiRobotFill, RiOpenaiFill, RiRobot2Fill, RiRobotLine, RiAliensFill, RiSpaceShipFill, RiUserSmileLine, RiUserHeartLine, RiUserStarLine, RiUserSettingsLine, RiUserSearchLine, RiUserLocationLine, RiUserFollowLine, RiUserSharedLine, RiUserVoiceLine, RiEarthLine } from 'react-icons/ri'
 import { HiSparkles } from 'react-icons/hi'
@@ -26,28 +27,23 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived, className = '', onSettingsChange }: SidebarProps) {
-  const [activeTab, setActiveTab] = useState<'files' | 'settings' | 'about'>('files')
-  const { isDarkMode, toggleDarkMode, fontSize, setFontSize } = useTheme()
-  const [showTimestamps, setShowTimestamps] = useState(true)
+  const [activeTab, setActiveTab] = useState('files')
+  const [showTimestamps, setShowTimestamps] = useState(false)
   const [autoDeleteFiles, setAutoDeleteFiles] = useState(false)
-  const [selectedAvatar, setSelectedAvatar] = useState('TbRobot')
+  const [selectedAvatar, setSelectedAvatar] = useState('RiRobotFill')
   const [selectedUserAvatar, setSelectedUserAvatar] = useState('FiUser')
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false)
   const [isUserAvatarDropdownOpen, setIsUserAvatarDropdownOpen] = useState(false)
   const avatarDropdownRef = useRef<HTMLDivElement>(null)
   const userAvatarDropdownRef = useRef<HTMLDivElement>(null)
+  const { isDarkMode, toggleDarkMode, fontSize, setFontSize } = useTheme()
+  const { files, isLoading, error, fetchFiles, deleteFile, clearCache } = useFileList()
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (avatarDropdownRef.current && !avatarDropdownRef.current.contains(event.target as Node)) {
-        setIsAvatarDropdownOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  // Handle file list refresh
+  const refreshFiles = useCallback(async () => {
+    clearCache()
+    await fetchFiles(true)
+  }, [clearCache, fetchFiles])
 
   const handleFileSelect = (filename: string) => {
     onFileProcessed(filename)
@@ -121,42 +117,45 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
   ]
 
   return (
-    <div className={`w-80 border-r border-gray-200 dark:border-gray-700 flex flex-col ${className}`}>
+    <div className={`flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 w-80 flex-shrink-0 ${className}`}>
       {/* Sidebar Header */}
       <div className="h-16 border-b border-gray-200 dark:border-gray-700 flex items-center px-4">
         <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-200">PDF Pal</h1>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="grid grid-cols-3 gap-1 p-2 bg-gray-50 dark:bg-gray-800/50">
+      <div className="flex items-center space-x-2 p-2 bg-gray-50 dark:bg-gray-800/50">
         <button
           onClick={() => setActiveTab('files')}
-          className={`flex flex-col items-center p-2 rounded-lg text-sm
+          className={`flex items-center justify-center flex-1 px-3 py-2 rounded-lg text-sm font-medium
+            transition-colors duration-150 ease-in-out
             ${activeTab === 'files'
-              ? 'bg-white dark:bg-gray-800 text-blue-500 dark:text-blue-400 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-800/50'}`}
+              ? 'bg-blue-500 text-white shadow-sm'
+              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
         >
-          <FiList className="w-5 h-5 mb-1" />
+          <FiList className="w-4 h-4 mr-2" />
           Files
         </button>
         <button
           onClick={() => setActiveTab('settings')}
-          className={`flex flex-col items-center p-2 rounded-lg text-sm
+          className={`flex items-center justify-center flex-1 px-3 py-2 rounded-lg text-sm font-medium
+            transition-colors duration-150 ease-in-out
             ${activeTab === 'settings'
-              ? 'bg-white dark:bg-gray-800 text-blue-500 dark:text-blue-400 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-800/50'}`}
+              ? 'bg-blue-500 text-white shadow-sm'
+              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
         >
-          <FiSettings className="w-5 h-5 mb-1" />
+          <FiSettings className="w-4 h-4 mr-2" />
           Settings
         </button>
         <button
           onClick={() => setActiveTab('about')}
-          className={`flex flex-col items-center p-2 rounded-lg text-sm
+          className={`flex items-center justify-center flex-1 px-3 py-2 rounded-lg text-sm font-medium
+            transition-colors duration-150 ease-in-out
             ${activeTab === 'about'
-              ? 'bg-white dark:bg-gray-800 text-blue-500 dark:text-blue-400 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:bg-white dark:hover:bg-gray-800/50'}`}
+              ? 'bg-blue-500 text-white shadow-sm'
+              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
         >
-          <FiInfo className="w-5 h-5 mb-1" />
+          <FiInfo className="w-4 h-4 mr-2" />
           About
         </button>
       </div>
@@ -169,11 +168,17 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
               <FileUpload
                 onFileProcessed={onFileProcessed}
                 onSummaryReceived={onSummaryReceived}
+                onUploadComplete={refreshFiles}
               />
             </div>
             <FileList
               onFileSelect={handleFileSelect}
               activeFile={activePDF}
+              files={files}
+              isLoading={isLoading}
+              error={error}
+              onDelete={deleteFile}
+              onDeleteComplete={refreshFiles}
             />
           </div>
         )}

@@ -3,17 +3,16 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FiUploadCloud } from 'react-icons/fi';
-import { useFileList } from '../hooks/useFileList';
 
 interface FileUploadProps {
   onFileProcessed: (filename: string) => void;
   onSummaryReceived: (summary: string) => void;
+  onUploadComplete: () => void;
 }
 
-export default function FileUpload({ onFileProcessed, onSummaryReceived }: FileUploadProps) {
+export default function FileUpload({ onFileProcessed, onSummaryReceived, onUploadComplete }: FileUploadProps) {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  const { fetchFiles, clearCache } = useFileList();
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     const file = acceptedFiles[0];
@@ -47,16 +46,15 @@ export default function FileUpload({ onFileProcessed, onSummaryReceived }: FileU
         onSummaryReceived(data.summary);
       }
 
-      // Clear cache and refresh file list
-      clearCache();
-      await fetchFiles(true);
+      // Notify parent that upload is complete
+      onUploadComplete();
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setUploading(false);
     }
-  }, [onFileProcessed, onSummaryReceived, fetchFiles, clearCache]);
+  }, [onFileProcessed, onSummaryReceived, onUploadComplete]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

@@ -1,26 +1,39 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { FiFile, FiTrash2, FiClock, FiMaximize2 } from 'react-icons/fi'
-import { useFileList } from '../hooks/useFileList'
 import PDFThumbnail from './PDFThumbnail'
 import PDFPreviewModal from './PDFPreviewModal'
 import DeleteFileModal from './DeleteFileModal'
 
+interface FileInfo {
+  filename: string
+  size: number
+  created_at: number
+  last_modified: number
+}
+
 interface FileListProps {
   onFileSelect: (filename: string) => void
   activeFile: string | null
+  files: FileInfo[]
+  isLoading: boolean
+  error: string | null
+  onDelete: (filename: string) => Promise<void>
+  onDeleteComplete: () => void
 }
 
-export default function FileList({ onFileSelect, activeFile }: FileListProps) {
-  const { files, isLoading, error, fetchFiles, deleteFile } = useFileList()
+export default function FileList({
+  onFileSelect,
+  activeFile,
+  files,
+  isLoading,
+  error,
+  onDelete,
+  onDeleteComplete
+}: FileListProps) {
   const [previewFile, setPreviewFile] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<{ id: string, name: string } | null>(null)
-
-  // Fetch files on mount
-  useEffect(() => {
-    fetchFiles()
-  }, [])
 
   const handleDelete = async (filename: string, e: React.MouseEvent) => {
     e.stopPropagation() // Prevent file selection when clicking delete
@@ -30,8 +43,9 @@ export default function FileList({ onFileSelect, activeFile }: FileListProps) {
   const handleConfirmDelete = async () => {
     if (selectedFile) {
       try {
-        await deleteFile(selectedFile.id)
+        await onDelete(selectedFile.id)
         setSelectedFile(null)
+        onDeleteComplete()
       } catch (err) {
         alert('Failed to delete file')
       }

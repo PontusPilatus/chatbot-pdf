@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface FileInfo {
   filename: string
@@ -24,16 +24,18 @@ export function useFileList() {
   const [files, setFiles] = useState<FileInfo[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
-  const clearCache = () => {
+  const clearCache = useCallback(() => {
     try {
       localStorage.removeItem(CACHE_KEY)
+      setRefreshTrigger(prev => prev + 1) // Trigger a refresh when cache is cleared
     } catch (err) {
       console.error('Error clearing cache:', err)
     }
-  }
+  }, [])
 
-  const updateCache = (files: FileInfo[]) => {
+  const updateCache = useCallback((files: FileInfo[]) => {
     try {
       // Don't cache if too many files
       if (files.length > MAX_CACHED_FILES) {
@@ -51,16 +53,10 @@ export function useFileList() {
       console.error('Error updating cache:', err)
       clearCache()
     }
-  }
-
-  // Clear cache and fetch fresh data on mount
-  useEffect(() => {
-    clearCache() // Clear cache on mount
-    fetchFiles(true) // Force fresh data fetch
-  }, [])
+  }, [clearCache])
 
   // Fetch fresh data
-  const fetchFiles = async (skipCache = false) => {
+  const fetchFiles = useCallback(async (skipCache = false) => {
     try {
       setError(null)
       if (!skipCache) setIsLoading(true)
@@ -80,10 +76,10 @@ export function useFileList() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [clearCache, updateCache])
 
   // Delete file and update cache
-  const deleteFile = async (filename: string) => {
+  const deleteFile = useCallback(async (filename: string) => {
     try {
       const response = await fetch(`http://localhost:8000/api/files/${filename}`, {
         method: 'DELETE'
@@ -98,7 +94,12 @@ export function useFileList() {
       console.error(err)
       throw new Error('Failed to delete file')
     }
-  }
+  }, [files, updateCache])
+
+  // Fetch files when component mounts or when refreshTrigger changes
+  useEffect(() => {
+    fetchFiles(true)
+  }, [fetchFiles, refreshTrigger])
 
   return {
     files,
