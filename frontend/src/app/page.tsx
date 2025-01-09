@@ -262,7 +262,7 @@ export default function Home() {
     }]);
   };
 
-  const handleFileSelect = (filename: string) => {
+  const handleFileSelect = (filename: string | null) => {
     setActivePDF(filename);
   };
 
