@@ -9,6 +9,8 @@ An AI-powered companion that can answer questions about PDF documents. Built wit
   - Smart text chunking for large documents
   - Vector embeddings for semantic search
   - ChromaDB for efficient document storage
+  - Multi-language support with automatic language detection
+  - Intelligent response in user's preferred language
 
 - 💬 Chat Interface
   - Interactive real-time chat with streaming responses
@@ -16,18 +18,28 @@ An AI-powered companion that can answer questions about PDF documents. Built wit
   - Smart context window management
   - Conversation history tracking
   - Token usage optimization
+  - Cross-document analysis capabilities
 
 - 📊 Resource Management
   - Rate limiting and usage controls
   - Token counting and cost estimation
   - Daily cost limits
   - Efficient context window utilization
+  - Multi-document processing optimization
 
 - 🔄 Real-time Updates
   - Progress bar for file uploads
   - Loading states and animations
   - Error handling and user feedback
   - Streaming chat responses
+  - Real-time annotation updates
+
+- 📝 Document Interaction
+  - PDF annotations and highlights
+  - Bookmarking system
+  - Advanced search capabilities
+  - Citation extraction
+  - Table and figure detection
 
 ## Project Structure
 
@@ -127,14 +139,46 @@ RATE_LIMIT_PER_MIN=10
 
 ## Project Roadmap
 
-### PDF Processing Backend
+### Enhanced PDF Processing
 - [x] Create PDF text extraction service
 - [x] Implement text chunking for large documents
 - [x] Set up vector database (ChromaDB) for document storage
 - [x] Create embeddings generation service
 - [x] Add document cleanup and preprocessing
+- [x] Implement multi-language support
+- [ ] Add table and figure detection
+- [ ] Enhance document summarization
+- [ ] Add citation extraction capabilities
+- [ ] Implement cross-document analysis
 
-### Chat Functionality
+### Current Focus: PDF Preview & Highlighting
+We are currently implementing an interactive PDF preview system with the following features:
+- Split-view layout (PDF + Chat)
+- Real-time text highlighting
+- Zoom and page navigation controls
+- Response-to-document linking
+- Page thumbnails and quick navigation
+
+Implementation Plan:
+1. Frontend Components
+   - PDF viewer integration using react-pdf/PDF.js
+   - Responsive split-view layout
+   - Highlight overlay system
+   - Navigation and zoom controls
+
+2. Backend Enhancements
+   - Page number tracking in vector store
+   - Highlight coordinates storage
+   - Metadata management for highlights
+   - Efficient page serving
+
+3. User Experience
+   - Smooth scrolling and navigation
+   - Synchronized chat-document view
+   - Highlight color coding
+   - Quick jump to referenced sections
+
+### Advanced Chat Features
 - [x] Create chat message interface/types
 - [x] Implement chat history state management
 - [x] Add chat message components
@@ -142,14 +186,21 @@ RATE_LIMIT_PER_MIN=10
 - [x] Integrate with OpenAI/LLM API
 - [x] Add streaming response support
 - [x] Implement context window management
+- [ ] Add document comparison features
+- [ ] Implement cross-referencing
+- [ ] Add domain-specific model support
 
-### File Management
+### Document Interaction
 - [x] Add file list/history view
 - [x] Implement file deletion
 - [x] Add file size limits and validation
 - [x] Create file metadata storage
 - [x] Add progress bar for uploads
 - [x] Handle duplicate file names
+- [ ] Implement annotation system
+- [ ] Add bookmarking functionality
+- [ ] Create advanced search features
+- [ ] Add PDF editing capabilities
 
 ### UI/UX Improvements
 - [x] Add loading states and animations
@@ -158,6 +209,10 @@ RATE_LIMIT_PER_MIN=10
 - [x] Create dark mode support
 - [x] Add font size controls
 - [x] Implement session management
+- [ ] Add interactive visualization tools
+- [ ] Implement PDF preview
+- [ ] Add annotation interface
+- [ ] Create bookmark management UI
 
 ### Security & Performance
 - [x] Add API rate limiting
@@ -166,16 +221,33 @@ RATE_LIMIT_PER_MIN=10
 - [x] Optimize PDF processing for large files
 - [x] Add caching layer for file list
 - [x] Implement proper environment variable management
+- [ ] Add multi-document processing optimization
+- [ ] Implement annotation security
+- [ ] Add document version control
 
-### Nice to Have Features
-- [ ] Multi-file support (chat with multiple PDFs)
-- [x] Export chat history
-- [ ] PDF preview
-- [ ] Highlight relevant PDF sections in responses
-- [ ] Save favorite/frequent questions
-- [ ] User authentication
-- [x] Customizable chat avatars
-- [x] Message timestamps
+### Planned Features
+- Multi-language Support
+  - Enhanced non-Latin script handling
+  - Language-specific text processing
+  - Translation capabilities
+  
+- Document Analysis
+  - Advanced summarization
+  - Table and figure extraction
+  - Citation management
+  - Cross-document analysis
+  
+- Interactive Features
+  - PDF annotations and highlights
+  - Bookmarking system
+  - Advanced search capabilities
+  - Interactive visualizations
+  
+- PDF Management
+  - Basic editing capabilities
+  - Document merging and splitting
+  - Version control
+  - Batch processing
 
 Looking at the remaining features, the most impactful next steps would be:
 1. PDF preview - helps users verify they're working with the right document

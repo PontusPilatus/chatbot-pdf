@@ -12,6 +12,7 @@ import { BiBrain } from 'react-icons/bi'
 import { TbBrain, TbRobot } from 'react-icons/tb'
 import { IoExtensionPuzzle } from 'react-icons/io5'
 import { convertToMarkdown, downloadMarkdown } from '@/utils/exportChat'
+import PDFViewer from './components/PDFViewer'
 
 const BotAvatars = {
   RiAiGenerate,
@@ -228,131 +229,90 @@ export default function Home() {
         activePDF={activePDF}
         onFileProcessed={handleFileProcessed}
         onSummaryReceived={handleSummaryReceived}
-        className="h-screen"
+        className="h-screen w-64 flex-shrink-0"
         onSettingsChange={(settings) => {
           setShowTimestamps(settings.showTimestamps)
           setSelectedAvatar(settings.selectedAvatar)
         }}
       />
 
-      {/* Chat Area */}
-      <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-gray-800">
-        {/* Chat Header */}
-        <div className="h-16 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
-          <h2 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center">
-            {activePDF ? (
-              <>
-                <span className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mr-2"></span>
-                {activePDF}
-              </>
-            ) : (
-              'General Chat'
-            )}
-          </h2>
-          <button
-            onClick={() => {
-              const content = convertToMarkdown(messages, activePDF)
-              const filename = `pdf-pal-chat-${new Date().toISOString().split('T')[0]}.md`
-              downloadMarkdown(content, filename)
-            }}
-            className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg
-              transition-colors duration-200"
-            title="Export chat"
-          >
-            <FiDownload className="w-5 h-5" />
-          </button>
-        </div>
+      {/* Main Content Area */}
+      <div className="flex-1 flex min-h-0">
+        {/* PDF Viewer */}
+        <PDFViewer
+          url={activePDF ? `/uploads/${activePDF}` : null}
+          filename={activePDF}
+          className="w-1/2 border-r border-gray-200 dark:border-gray-700"
+        />
 
-        {/* Messages */}
-        <div
-          className="flex-1 overflow-y-auto py-6 bg-white dark:bg-gray-800"
-          ref={chatContainerRef}
-        >
-          <div className="max-w-3xl mx-auto space-y-6 px-6">
-            {messages.map(message => (
-              message.isStreaming ? (
-                <div key={message.id} className="flex justify-start">
-                  <div className="flex items-end space-x-2 max-w-[80%]">
-                    {/* Avatar */}
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 
-                      bg-gray-600 dark:bg-gray-700 text-white">
-                      {(() => {
-                        const BotIcon = BotAvatars[selectedAvatar as keyof typeof BotAvatars] || RiAiGenerate
-                        return <BotIcon className="w-5 h-5" />
-                      })()}
-                    </div>
-
-                    {/* Typing Indicator */}
-                    <div className="flex flex-col space-y-1">
-                      <div className="px-4 py-3 rounded-2xl text-sm 
-                        bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none">
-                        <TypingIndicator />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+        {/* Chat Area */}
+        <div className="w-1/2 flex flex-col min-h-0 bg-white dark:bg-gray-800">
+          {/* Chat Header */}
+          <div className="h-16 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
+            <h2 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center">
+              {activePDF ? (
+                <>
+                  <span className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mr-2"></span>
+                  {activePDF}
+                </>
               ) : (
-                <ChatMessage
-                  key={message.id}
-                  message={message}
-                  showTimestamp={showTimestamps}
-                  selectedAvatar={selectedAvatar}
-                />
-              )
-            ))}
-            {isLoading && (
-              <div className="flex justify-center items-center py-4">
-                <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-                  <div className="w-4 h-4 border-2 border-gray-300 dark:border-gray-600 
-                    border-t-blue-500 dark:border-t-blue-400 rounded-full animate-spin">
-                  </div>
-                  <span>Processing...</span>
-                </div>
-              </div>
+                'General Chat'
+              )}
+            </h2>
+            {messages.length > 0 && (
+              <button
+                onClick={() => {
+                  const content = convertToMarkdown(messages, activePDF)
+                  const filename = `pdf-pal-chat-${new Date().toISOString().split('T')[0]}.md`
+                  downloadMarkdown(content, filename)
+                }}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                title="Download chat history"
+              >
+                <FiDownload className="w-5 h-5" />
+              </button>
             )}
           </div>
-        </div>
 
-        {/* Input Area */}
-        <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4">
-          <div className="max-w-3xl mx-auto">
-            <form onSubmit={handleSubmit} className="relative">
-              <textarea
+          {/* Messages */}
+          <div
+            ref={chatContainerRef}
+            className="flex-1 overflow-y-auto p-6 space-y-4"
+          >
+            {messages.map((message) => (
+              <ChatMessage
+                key={message.id}
+                message={message}
+                showTimestamp={showTimestamps}
+                selectedAvatar={selectedAvatar}
+              />
+            ))}
+            {isLoading && <TypingIndicator />}
+          </div>
+
+          {/* Input Area */}
+          <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex space-x-4">
+              <input
+                type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                placeholder={activePDF
-                  ? "Ask a question about the PDF..."
-                  : "Ask me anything about my functionality..."}
-                className="w-full p-4 pr-24 border dark:border-gray-700 rounded-2xl focus:outline-none 
-                  focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400
-                  min-h-[60px] max-h-[180px] resize-y 
-                  bg-gray-50 dark:bg-gray-700 
-                  placeholder-gray-500 dark:placeholder-gray-400 
-                  text-gray-900 dark:text-gray-100"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault()
-                    handleSubmit(e)
-                  }
-                }}
+                placeholder="Ask a question about your PDF..."
+                className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500
+                  dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                disabled={isLoading}
               />
-              <div className="absolute right-2 bottom-2 flex items-center space-x-2">
-                <span className="text-xs text-gray-400 dark:text-gray-500">
-                  {inputMessage.length > 0 ? `${inputMessage.length} chars` : 'Enter to send'}
-                </span>
-                <button
-                  type="submit"
-                  disabled={!inputMessage.trim() || isLoading}
-                  className="p-2 bg-blue-500 dark:bg-blue-600 text-white rounded-xl 
-                    hover:bg-blue-600 dark:hover:bg-blue-700
-                    disabled:bg-gray-300 dark:disabled:bg-gray-600 
-                    disabled:cursor-not-allowed"
-                >
-                  <FiSend className={`w-4 h-4 ${isLoading ? 'animate-pulse' : ''}`} />
-                </button>
-              </div>
-            </form>
-          </div>
+              <button
+                type="submit"
+                disabled={isLoading || !inputMessage.trim()}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <FiSend className="w-5 h-5" />
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </main>
