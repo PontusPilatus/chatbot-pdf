@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, MouseEvent } from 'react'
 import ChatMessage from './components/ChatMessage'
 import { ChatMessage as ChatMessageType } from '@/types/chat'
 import { v4 as uuidv4 } from 'uuid'
@@ -46,6 +46,8 @@ export default function Home() {
   const [showTimestamps, setShowTimestamps] = useState(true)
   const [selectedAvatar, setSelectedAvatar] = useState('RiAiGenerate')
   const chatContainerRef = useRef<HTMLDivElement>(null)
+  const [splitPosition, setSplitPosition] = useState(50)
+  const [isDragging, setIsDragging] = useState(false)
 
   useEffect(() => {
     // Add welcome messages sequence when component mounts
@@ -222,6 +224,66 @@ export default function Home() {
     }]);
   };
 
+  const handleDragStart = () => {
+    setIsDragging(true)
+  }
+
+  const handleDrag = (e: globalThis.MouseEvent) => {
+    if (!isDragging) return
+
+    const mainContent = document.querySelector('.main-content-area')
+    if (!mainContent) return
+
+    const rect = mainContent.getBoundingClientRect()
+    const newPosition = ((e.clientX - rect.left) / rect.width) * 100
+
+    // Limit the range to prevent panels from becoming too small
+    const clampedPosition = Math.min(Math.max(newPosition, 20), 80)
+    setSplitPosition(clampedPosition)
+  }
+
+  const handleDragEnd = () => {
+    setIsDragging(false)
+  }
+
+  // Add mouse move and mouse up listeners
+  useEffect(() => {
+    if (isDragging) {
+      const handleMouseMove = (e: globalThis.MouseEvent) => {
+        e.preventDefault()
+        handleDrag(e)
+      }
+
+      const handleMouseUp = () => {
+        setIsDragging(false)
+      }
+
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+      }
+    }
+  }, [isDragging])
+
+  // Add a cursor style effect while dragging
+  useEffect(() => {
+    if (isDragging) {
+      document.body.style.cursor = 'col-resize'
+      document.body.style.userSelect = 'none'
+    } else {
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    return () => {
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+  }, [isDragging])
+
   return (
     <main className="h-screen flex bg-gray-50 dark:bg-gray-900">
       {/* Sidebar */}
@@ -237,82 +299,101 @@ export default function Home() {
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 relative main-content-area">
         {/* PDF Viewer */}
-        <PDFViewer
-          url={activePDF ? `/uploads/${activePDF}` : null}
-          filename={activePDF}
-          className="w-1/2 border-r border-gray-200 dark:border-gray-700"
+        <div
+          className="h-full"
+          style={{ width: `${splitPosition}%` }}
+        >
+          <PDFViewer
+            url={activePDF ? `/uploads/${activePDF}` : null}
+            filename={activePDF}
+            className="h-full border-r border-gray-200 dark:border-gray-700"
+          />
+        </div>
+
+        {/* Resizable Divider */}
+        <div
+          className="absolute top-0 bottom-0 w-1 cursor-col-resize bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-150"
+          style={{ left: `${splitPosition}%` }}
+          onMouseDown={handleDragStart}
+          onDoubleClick={() => setSplitPosition(50)}
+          title="Double click to reset"
         />
 
         {/* Chat Area */}
-        <div className="w-1/2 flex flex-col min-h-0 bg-white dark:bg-gray-800">
-          {/* Chat Header */}
-          <div className="h-16 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
-            <h2 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center">
-              {activePDF ? (
-                <>
-                  <span className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mr-2"></span>
-                  {activePDF}
-                </>
-              ) : (
-                'General Chat'
+        <div
+          className="h-full bg-white dark:bg-gray-800"
+          style={{ width: `${100 - splitPosition}%` }}
+        >
+          <div className="h-full flex flex-col">
+            {/* Chat Header */}
+            <div className="h-16 flex-shrink-0 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
+              <h2 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center">
+                {activePDF ? (
+                  <>
+                    <span className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mr-2"></span>
+                    {activePDF}
+                  </>
+                ) : (
+                  'General Chat'
+                )}
+              </h2>
+              {messages.length > 0 && (
+                <button
+                  onClick={() => {
+                    const content = convertToMarkdown(messages, activePDF)
+                    const filename = `pdf-pal-chat-${new Date().toISOString().split('T')[0]}.md`
+                    downloadMarkdown(content, filename)
+                  }}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  title="Download chat history"
+                >
+                  <FiDownload className="w-5 h-5" />
+                </button>
               )}
-            </h2>
-            {messages.length > 0 && (
-              <button
-                onClick={() => {
-                  const content = convertToMarkdown(messages, activePDF)
-                  const filename = `pdf-pal-chat-${new Date().toISOString().split('T')[0]}.md`
-                  downloadMarkdown(content, filename)
-                }}
-                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                title="Download chat history"
-              >
-                <FiDownload className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-
-          {/* Messages */}
-          <div
-            ref={chatContainerRef}
-            className="flex-1 overflow-y-auto p-6 space-y-4"
-          >
-            {messages.map((message) => (
-              <ChatMessage
-                key={message.id}
-                message={message}
-                showTimestamp={showTimestamps}
-                selectedAvatar={selectedAvatar}
-              />
-            ))}
-            {isLoading && <TypingIndicator />}
-          </div>
-
-          {/* Input Area */}
-          <form onSubmit={handleSubmit} className="p-4 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex space-x-4">
-              <input
-                type="text"
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                placeholder="Ask a question about your PDF..."
-                className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500
-                  dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                disabled={isLoading}
-              />
-              <button
-                type="submit"
-                disabled={isLoading || !inputMessage.trim()}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600
-                  disabled:opacity-50 disabled:cursor-not-allowed
-                  focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <FiSend className="w-5 h-5" />
-              </button>
             </div>
-          </form>
+
+            {/* Messages */}
+            <div
+              ref={chatContainerRef}
+              className="flex-1 overflow-y-auto p-6 space-y-4"
+            >
+              {messages.map((message) => (
+                <ChatMessage
+                  key={message.id}
+                  message={message}
+                  showTimestamp={showTimestamps}
+                  selectedAvatar={selectedAvatar}
+                />
+              ))}
+              {isLoading && <TypingIndicator />}
+            </div>
+
+            {/* Input Area */}
+            <form onSubmit={handleSubmit} className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex space-x-4">
+                <input
+                  type="text"
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  placeholder="Ask a question about your PDF..."
+                  className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500
+                    dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  disabled={isLoading}
+                />
+                <button
+                  type="submit"
+                  disabled={isLoading || !inputMessage.trim()}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                    focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <FiSend className="w-5 h-5" />
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </main>
