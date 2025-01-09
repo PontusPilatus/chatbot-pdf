@@ -169,7 +169,7 @@ RATE_LIMIT_PER_MIN=10
 
 ### Nice to Have Features
 - [ ] Multi-file support (chat with multiple PDFs)
-- [ ] Export chat history
+- [x] Export chat history
 - [ ] PDF preview
 - [ ] Highlight relevant PDF sections in responses
 - [ ] Save favorite/frequent questions
@@ -179,8 +179,8 @@ RATE_LIMIT_PER_MIN=10
 
 Looking at the remaining features, the most impactful next steps would be:
 1. PDF preview - helps users verify they're working with the right document
-2. Export chat history - allows users to save valuable conversations
-3. Multi-file support - enables more complex document interactions
+2. Multi-file support - enables more complex document interactions
+3. Highlight relevant PDF sections - provides better context in responses
 
 Which feature would you like to implement next?
 

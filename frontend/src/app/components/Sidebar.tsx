@@ -205,7 +205,7 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
                       <FiSun className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                     )}
                     <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+                      {isDarkMode ? 'Dark Mode' : 'Light Mode'}
                     </span>
                   </div>
                   <button
@@ -238,7 +238,8 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => setFontSize(Math.max(12, fontSize - 1))}
-                        className="p-2 rounded-lg bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 
+                        className="w-8 h-8 rounded-lg flex items-center justify-center
+                          bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 
                           hover:bg-gray-100 dark:hover:bg-gray-600
                           border border-gray-200 dark:border-gray-600"
                       >
@@ -246,7 +247,8 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
                       </button>
                       <button
                         onClick={() => setFontSize(Math.min(24, fontSize + 1))}
-                        className="p-2 rounded-lg bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 
+                        className="w-8 h-8 rounded-lg flex items-center justify-center
+                          bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 
                           hover:bg-gray-100 dark:hover:bg-gray-600
                           border border-gray-200 dark:border-gray-600"
                       >
@@ -397,7 +399,7 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
                   <div className="flex items-center space-x-3">
                     <FiClock className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                     <span className="text-sm text-gray-700 dark:text-gray-300">
-                      Show Timestamps
+                      Timestamps
                     </span>
                   </div>
                   <button
@@ -428,10 +430,10 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
                     <FiTrash2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                     <div className="flex flex-col">
                       <span className="text-sm text-gray-700 dark:text-gray-300">
-                        Auto-delete Files
+                        {autoDeleteFiles ? 'Auto-delete Enabled' : 'Auto-delete Disabled'}
                       </span>
                       <span className="text-xs text-gray-500 dark:text-gray-400">
-                        Delete files after 30 days
+                        {autoDeleteFiles ? 'Files will be deleted after 30 days' : 'Files will be kept indefinitely'}
                       </span>
                     </div>
                   </div>

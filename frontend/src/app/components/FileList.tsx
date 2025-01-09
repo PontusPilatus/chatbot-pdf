@@ -1,9 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FiFile, FiTrash2, FiClock, FiMaximize2 } from 'react-icons/fi'
-import PDFThumbnail from './PDFThumbnail'
-import PDFPreviewModal from './PDFPreviewModal'
+import { FiFile, FiTrash2, FiClock } from 'react-icons/fi'
 import DeleteFileModal from './DeleteFileModal'
 
 interface FileInfo {
@@ -32,7 +30,6 @@ export default function FileList({
   onDelete,
   onDeleteComplete
 }: FileListProps) {
-  const [previewFile, setPreviewFile] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<{ id: string, name: string } | null>(null)
 
   const handleDelete = async (filename: string, e: React.MouseEvent) => {
@@ -104,11 +101,8 @@ export default function FileList({
               ? 'bg-blue-50 dark:bg-blue-900/20'
               : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
         >
-          <div className="w-16 h-20 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-            <PDFThumbnail
-              url={`/api/files/${file.filename}`}
-              width={64}
-            />
+          <div className="w-16 h-20 flex-shrink-0 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-center">
+            <FiFile className="w-8 h-8 text-gray-400 dark:text-gray-500" />
           </div>
 
           <div className="ml-3 flex-1 min-w-0">
@@ -117,18 +111,6 @@ export default function FileList({
                 {file.filename}
               </p>
               <div className="flex items-center space-x-1">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setPreviewFile(file.filename)
-                  }}
-                  className="p-1 rounded-lg opacity-0 group-hover:opacity-100
-                    hover:bg-gray-100 dark:hover:bg-gray-700
-                    text-gray-500 dark:text-gray-400"
-                  title="Preview PDF"
-                >
-                  <FiMaximize2 className="w-4 h-4" />
-                </button>
                 <button
                   onClick={(e) => handleDelete(file.filename, e)}
                   className="p-1 rounded-lg opacity-0 group-hover:opacity-100
@@ -149,14 +131,6 @@ export default function FileList({
           </div>
         </div>
       ))}
-
-      {previewFile && (
-        <PDFPreviewModal
-          url={`/api/files/${previewFile}`}
-          filename={previewFile}
-          onClose={() => setPreviewFile(null)}
-        />
-      )}
 
       <DeleteFileModal
         isOpen={selectedFile !== null}
