@@ -6,7 +6,7 @@ import FileList from './FileList'
 import { useTheme } from '../contexts/ThemeContext'
 import { useFileList } from '../hooks/useFileList'
 import { FiUser, FiUpload, FiList, FiSettings, FiInfo, FiSun, FiMoon, FiClock, FiTrash2, FiGlobe, FiChevronDown, FiX } from 'react-icons/fi'
-import { RiRobotFill, RiOpenaiFill, RiRobot2Fill, RiRobotLine, RiAliensFill, RiSpaceShipFill, RiUserSmileLine, RiUserHeartLine, RiUserStarLine, RiUserSettingsLine, RiUserSearchLine, RiUserLocationLine, RiUserFollowLine, RiUserSharedLine, RiUserVoiceLine, RiEarthLine } from 'react-icons/ri'
+import { RiRobotFill, RiOpenaiFill, RiRobot2Fill, RiRobotLine, RiAliensFill, RiSpaceShipFill, RiUserSmileLine, RiUserHeartLine, RiUserStarLine, RiUserSettingsLine, RiUserSearchLine, RiUserLocationLine, RiUserFollowLine, RiUserSharedLine, RiUserVoiceLine, RiEarthLine, RiAiGenerate } from 'react-icons/ri'
 import { HiSparkles } from 'react-icons/hi'
 import { BiBrain, BiUserCircle, BiUserPin, BiUserCheck } from 'react-icons/bi'
 import { TbBrain, TbRobot } from 'react-icons/tb'
@@ -40,9 +40,9 @@ export default function Sidebar({
   onSettingsChange
 }: SidebarProps) {
   const [activeTab, setActiveTab] = useState('files')
-  const [showTimestamps, setShowTimestamps] = useState(false)
+  const [showTimestamps, setShowTimestamps] = useState(true)
   const [autoDeleteFiles, setAutoDeleteFiles] = useState(false)
-  const [selectedAvatar, setSelectedAvatar] = useState('RiRobotFill')
+  const [selectedAvatar, setSelectedAvatar] = useState('TbRobot')
   const [selectedUserAvatar, setSelectedUserAvatar] = useState('FiUser')
   const [isAvatarDropdownOpen, setIsAvatarDropdownOpen] = useState(false)
   const [isUserAvatarDropdownOpen, setIsUserAvatarDropdownOpen] = useState(false)
@@ -84,9 +84,9 @@ export default function Sidebar({
 
   const botAvatarOptions = [
     // Row 1: Robots
-    { id: 'TbRobot', name: 'Robot 3', icon: TbRobot },
-    { id: 'RiRobotFill', name: 'Robot', icon: RiRobotFill },
-    { id: 'RiRobot2Fill', name: 'Robot 2', icon: RiRobot2Fill },
+    { id: 'TbRobot', name: 'Robot 1', icon: TbRobot },
+    { id: 'RiRobotFill', name: 'Robot 2', icon: RiRobotFill },
+    { id: 'RiRobot2Fill', name: 'Robot 3', icon: RiRobot2Fill },
     { id: 'RiRobotLine', name: 'Robot 4', icon: RiRobotLine },
     // Row 2: Special Robots
     { id: 'GiRobotAntennas', name: 'Bot Friend', icon: GiRobotAntennas },
@@ -94,7 +94,7 @@ export default function Sidebar({
     { id: 'RiAliensFill', name: 'Alien Bot', icon: RiAliensFill },
     { id: 'RiSpaceShipFill', name: 'Space Bot', icon: RiSpaceShipFill },
     // Row 3: Brains & AI
-    { id: 'BiBrain', name: 'Brain', icon: BiBrain },
+    { id: 'BiBrain', name: 'Brain 1', icon: BiBrain },
     { id: 'TbBrain', name: 'Brain 2', icon: TbBrain },
     { id: 'GiBrain', name: 'Brain 3', icon: GiBrain },
     { id: 'GiArtificialIntelligence', name: 'AI Brain', icon: GiArtificialIntelligence },
@@ -131,16 +131,16 @@ export default function Sidebar({
   return (
     <div className={`flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 w-[320px] ${className}`}>
       {/* Sidebar Header */}
-      <div className="h-16 border-b border-gray-200 dark:border-gray-700 flex items-center px-4">
+      <div className="h-16 flex items-center px-4">
         <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-200">PDF Pal</h1>
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex flex-col h-full">
         {/* Files Section */}
         {activeTab === 'files' && (
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex-1">
+            <div className="p-4">
               <FileUpload
                 onFileProcessed={onFileProcessed}
                 onSummaryReceived={onSummaryReceived}
@@ -183,7 +183,7 @@ export default function Sidebar({
                 </h3>
                 <div className="space-y-3">
                   {/* Theme Toggle */}
-                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       {isDarkMode ? (
                         <FiMoon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
@@ -197,12 +197,10 @@ export default function Sidebar({
                     <button
                       onClick={toggleDarkMode}
                       className={`relative inline-flex h-6 w-11 items-center rounded-full
-                        transition-colors duration-200 ease-in-out focus:outline-none
                         ${isDarkMode ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-600'}`}
                     >
                       <span
                         className={`inline-block h-4 w-4 transform rounded-full bg-white shadow
-                          transition-transform duration-200 ease-in-out
                           ${isDarkMode ? 'translate-x-6' : 'translate-x-1'}`}
                       />
                     </button>
@@ -216,7 +214,7 @@ export default function Sidebar({
                   Text Size
                 </h3>
                 <div className="space-y-3">
-                  <div className="flex flex-col space-y-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex flex-col space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-700 dark:text-gray-300">
                         Font Size: {fontSize}px
@@ -225,18 +223,16 @@ export default function Sidebar({
                         <button
                           onClick={() => setFontSize(Math.max(12, fontSize - 1))}
                           className="w-8 h-8 rounded-lg flex items-center justify-center
-                            bg-white dark:bg-gray-600 text-gray-600 dark:text-gray-300 
-                            hover:bg-gray-100 dark:hover:bg-gray-500
-                            border border-gray-200 dark:border-gray-500"
+                            text-gray-600 dark:text-gray-300 
+                            hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
                           -
                         </button>
                         <button
                           onClick={() => setFontSize(Math.min(24, fontSize + 1))}
                           className="w-8 h-8 rounded-lg flex items-center justify-center
-                            bg-white dark:bg-gray-600 text-gray-600 dark:text-gray-300
-                            hover:bg-gray-100 dark:hover:bg-gray-500
-                            border border-gray-200 dark:border-gray-500"
+                            text-gray-600 dark:text-gray-300
+                            hover:bg-gray-100 dark:hover:bg-gray-700"
                         >
                           +
                         </button>
@@ -248,7 +244,7 @@ export default function Sidebar({
                       max="24"
                       value={fontSize}
                       onChange={(e) => setFontSize(parseInt(e.target.value))}
-                      className="w-full"
+                      className="w-full accent-blue-500"
                     />
                     <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
                       <span>Small</span>
@@ -263,125 +259,119 @@ export default function Sidebar({
                 <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Chat Settings
                 </h3>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {/* Avatar Selection */}
-                  <div className="flex flex-col space-y-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        {(() => {
-                          const Icon = botAvatarOptions.find(opt => opt.id === selectedAvatar)?.icon || TbRobot
-                          return <Icon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                        })()}
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
-                          Bot Avatar
-                        </span>
-                      </div>
-                      <div className="relative group" ref={avatarDropdownRef}>
-                        <button
-                          className="p-2 rounded-lg flex items-center justify-center
-                            bg-white dark:bg-gray-600 text-gray-600 dark:text-gray-300 
-                            hover:bg-gray-100 dark:hover:bg-gray-500
-                            border border-gray-200 dark:border-gray-500"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setIsAvatarDropdownOpen(!isAvatarDropdownOpen)
-                          }}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      {(() => {
+                        const Icon = botAvatarOptions.find(opt => opt.id === selectedAvatar)?.icon || TbRobot
+                        return <Icon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                      })()}
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        Bot Avatar
+                      </span>
+                    </div>
+                    <div className="relative group" ref={avatarDropdownRef}>
+                      <button
+                        className="p-2 rounded-lg flex items-center justify-center
+                          text-gray-600 dark:text-gray-300 
+                          hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setIsAvatarDropdownOpen(!isAvatarDropdownOpen)
+                        }}
+                      >
+                        <FiChevronDown className="w-4 h-4" />
+                      </button>
+                      {isAvatarDropdownOpen && (
+                        <div
+                          className="absolute right-0 mt-2 p-2 bg-white dark:bg-gray-700 rounded-lg shadow-lg
+                            border border-gray-200 dark:border-gray-600 z-50"
+                          style={{ width: '256px' }}
                         >
-                          <FiChevronDown className="w-4 h-4" />
-                        </button>
-                        {isAvatarDropdownOpen && (
-                          <div
-                            className="absolute right-0 mt-2 p-2 bg-white dark:bg-gray-700 rounded-lg shadow-lg
-                              border border-gray-200 dark:border-gray-600 z-50"
-                            style={{ width: '256px' }}
-                          >
-                            <div className="grid grid-cols-4 gap-2">
-                              {botAvatarOptions.map((option) => {
-                                const Icon = option.icon
-                                return (
-                                  <button
-                                    key={option.id}
-                                    onClick={() => {
-                                      updateSelectedAvatar(option.id)
-                                      setIsAvatarDropdownOpen(false)
-                                    }}
-                                    className={`p-2 rounded-lg flex items-center justify-center transition-colors duration-200
-                                      ${selectedAvatar === option.id
-                                        ? 'bg-blue-500 text-white'
-                                        : 'bg-gray-50 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500'}`}
-                                    title={option.name}
-                                  >
-                                    <Icon className="w-5 h-5" />
-                                  </button>
-                                )
-                              })}
-                            </div>
+                          <div className="grid grid-cols-4 gap-2">
+                            {botAvatarOptions.map((option) => {
+                              const Icon = option.icon
+                              return (
+                                <button
+                                  key={option.id}
+                                  onClick={() => {
+                                    updateSelectedAvatar(option.id)
+                                    setIsAvatarDropdownOpen(false)
+                                  }}
+                                  className={`p-2 rounded-lg flex items-center justify-center
+                                    ${selectedAvatar === option.id
+                                      ? 'bg-blue-500 text-white'
+                                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                  title={option.name}
+                                >
+                                  <Icon className="w-5 h-5" />
+                                </button>
+                              )
+                            })}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* User Avatar Selection */}
-                  <div className="flex flex-col space-y-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        {(() => {
-                          const Icon = userAvatarOptions.find(opt => opt.id === selectedUserAvatar)?.icon || FiUser
-                          return <Icon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                        })()}
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
-                          User Avatar
-                        </span>
-                      </div>
-                      <div className="relative group" ref={userAvatarDropdownRef}>
-                        <button
-                          className="p-2 rounded-lg flex items-center justify-center
-                            bg-white dark:bg-gray-600 text-gray-600 dark:text-gray-300 
-                            hover:bg-gray-100 dark:hover:bg-gray-500
-                            border border-gray-200 dark:border-gray-500"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setIsUserAvatarDropdownOpen(!isUserAvatarDropdownOpen)
-                          }}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      {(() => {
+                        const Icon = userAvatarOptions.find(opt => opt.id === selectedUserAvatar)?.icon || FiUser
+                        return <Icon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                      })()}
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        User Avatar
+                      </span>
+                    </div>
+                    <div className="relative group" ref={userAvatarDropdownRef}>
+                      <button
+                        className="p-2 rounded-lg flex items-center justify-center
+                          text-gray-600 dark:text-gray-300 
+                          hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setIsUserAvatarDropdownOpen(!isUserAvatarDropdownOpen)
+                        }}
+                      >
+                        <FiChevronDown className="w-4 h-4" />
+                      </button>
+                      {isUserAvatarDropdownOpen && (
+                        <div
+                          className="absolute right-0 mt-2 p-2 bg-white dark:bg-gray-700 rounded-lg shadow-lg
+                            border border-gray-200 dark:border-gray-600 z-50"
+                          style={{ width: '256px' }}
                         >
-                          <FiChevronDown className="w-4 h-4" />
-                        </button>
-                        {isUserAvatarDropdownOpen && (
-                          <div
-                            className="absolute right-0 mt-2 p-2 bg-white dark:bg-gray-700 rounded-lg shadow-lg
-                              border border-gray-200 dark:border-gray-600 z-50"
-                            style={{ width: '256px' }}
-                          >
-                            <div className="grid grid-cols-4 gap-2">
-                              {userAvatarOptions.map((option) => {
-                                const Icon = option.icon
-                                return (
-                                  <button
-                                    key={option.id}
-                                    onClick={() => {
-                                      updateSelectedUserAvatar(option.id)
-                                      setIsUserAvatarDropdownOpen(false)
-                                    }}
-                                    className={`p-2 rounded-lg flex items-center justify-center transition-colors duration-200
-                                      ${selectedUserAvatar === option.id
-                                        ? 'bg-blue-500 text-white'
-                                        : 'bg-gray-50 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500'}`}
-                                    title={option.name}
-                                  >
-                                    <Icon className="w-5 h-5" />
-                                  </button>
-                                )
-                              })}
-                            </div>
+                          <div className="grid grid-cols-4 gap-2">
+                            {userAvatarOptions.map((option) => {
+                              const Icon = option.icon
+                              return (
+                                <button
+                                  key={option.id}
+                                  onClick={() => {
+                                    updateSelectedUserAvatar(option.id)
+                                    setIsUserAvatarDropdownOpen(false)
+                                  }}
+                                  className={`p-2 rounded-lg flex items-center justify-center
+                                    ${selectedUserAvatar === option.id
+                                      ? 'bg-blue-500 text-white'
+                                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+                                  title={option.name}
+                                >
+                                  <Icon className="w-5 h-5" />
+                                </button>
+                              )
+                            })}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Message Display */}
-                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <FiClock className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                       <span className="text-sm text-gray-700 dark:text-gray-300">
@@ -411,7 +401,7 @@ export default function Sidebar({
                 </h3>
                 <div className="space-y-3">
                   {/* Auto-delete Files */}
-                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <FiTrash2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                       <div className="flex flex-col">
@@ -516,11 +506,10 @@ export default function Sidebar({
         )}
 
         {/* Bottom Navigation */}
-        <div className="border-t border-gray-200 dark:border-gray-700 p-2 space-y-2">
+        <div className="mt-auto p-2 space-y-2">
           <button
             onClick={() => setActiveTab(activeTab === 'settings' ? 'files' : 'settings')}
             className={`w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium
-              transition-colors duration-150 ease-in-out
               ${activeTab === 'settings'
                 ? 'bg-blue-500 text-white shadow-sm'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
@@ -531,7 +520,6 @@ export default function Sidebar({
           <button
             onClick={() => setActiveTab(activeTab === 'about' ? 'files' : 'about')}
             className={`w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium
-              transition-colors duration-150 ease-in-out
               ${activeTab === 'about'
                 ? 'bg-blue-500 text-white shadow-sm'
                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}

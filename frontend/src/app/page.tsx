@@ -6,7 +6,7 @@ import { ChatMessage as ChatMessageType } from '@/types/chat'
 import { v4 as uuidv4 } from 'uuid'
 import Sidebar from './components/Sidebar'
 import { FiSend, FiDownload, FiX } from 'react-icons/fi'
-import { RiAiGenerate, RiRobotFill, RiOpenaiFill, RiRobot2Fill, RiMindMap } from 'react-icons/ri'
+import { RiRobotFill, RiOpenaiFill, RiRobot2Fill, RiMindMap } from 'react-icons/ri'
 import { HiSparkles, HiLightBulb } from 'react-icons/hi'
 import { BiBrain } from 'react-icons/bi'
 import { TbBrain, TbRobot } from 'react-icons/tb'
@@ -15,10 +15,9 @@ import { convertToMarkdown, downloadMarkdown } from '@/utils/exportChat'
 import PDFViewer from './components/PDFViewer'
 
 const BotAvatars = {
-  RiAiGenerate,
+  TbRobot,
   RiRobotFill,
   RiRobot2Fill,
-  TbRobot,
   HiSparkles,
   BiBrain,
   TbBrain,
@@ -28,23 +27,14 @@ const BotAvatars = {
   RiOpenaiFill,
 }
 
-const TypingIndicator = () => (
-  <div className="flex items-center space-x-2 p-2">
-    <div className="flex space-x-1">
-      <div className="w-1.5 h-1.5 bg-gray-600 dark:bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-      <div className="w-1.5 h-1.5 bg-gray-600 dark:bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-      <div className="w-1.5 h-1.5 bg-gray-600 dark:bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-    </div>
-  </div>
-)
-
 export default function Home() {
   const [messages, setMessages] = useState<ChatMessageType[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [inputMessage, setInputMessage] = useState('')
   const [activePDF, setActivePDF] = useState<string | null>(null)
   const [showTimestamps, setShowTimestamps] = useState(true)
-  const [selectedAvatar, setSelectedAvatar] = useState('RiAiGenerate')
+  const [selectedAvatar, setSelectedAvatar] = useState('TbRobot')
+  const [selectedUserAvatar, setSelectedUserAvatar] = useState('FiUser')
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const [splitPosition, setSplitPosition] = useState(50)
@@ -58,7 +48,8 @@ export default function Home() {
         id: uuidv4(),
         role: 'assistant',
         content: '👋 Hi there! I\'m PDF Pal, your friendly document companion. I can help you understand and interact with your PDF documents through natural conversation!',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        isStreaming: false
       },
       {
         id: uuidv4(),
@@ -70,22 +61,60 @@ export default function Home() {
 3️⃣ Get instant, context-aware responses
 
 💡 Pro tip: Feel free to chat in any language - English, Swedish, Spanish, German, Chinese, Arabic, or any other language! I'll automatically detect and respond in your preferred language.`,
-        timestamp: new Date(Date.now() + 1500).toISOString()
+        timestamp: new Date(Date.now() + 1500).toISOString(),
+        isStreaming: false
       },
       {
         id: uuidv4(),
         role: 'assistant',
         content: 'Ready to begin? Upload a PDF or ask me about my features! 🚀',
-        timestamp: new Date(Date.now() + 3000).toISOString()
+        timestamp: new Date(Date.now() + 3000).toISOString(),
+        isStreaming: false
       }
     ]
 
-    // Add messages with a delay to simulate typing
-    welcomeMessages.forEach((message, index) => {
-      setTimeout(() => {
-        setMessages(prev => [...prev, message])
-      }, index * 1500) // 1.5 second delay between each message
-    })
+    let timeoutIds: NodeJS.Timeout[] = []
+
+    const displayMessages = async () => {
+      for (let i = 0; i < welcomeMessages.length; i++) {
+        const message = welcomeMessages[i]
+
+        // Add empty message with streaming indicator
+        const streamingId = uuidv4()
+        setMessages(prev => [...prev, {
+          ...message,
+          id: streamingId,
+          content: '',
+          isStreaming: true
+        }])
+
+        // Wait for a moment to simulate typing
+        await new Promise(resolve => {
+          timeoutIds.push(setTimeout(resolve, 1500))
+        })
+
+        // Update with full content
+        setMessages(prev => prev.map(msg =>
+          msg.id === streamingId
+            ? { ...message, isStreaming: false }
+            : msg
+        ))
+
+        // Wait before showing next message
+        if (i < welcomeMessages.length - 1) {
+          await new Promise(resolve => {
+            timeoutIds.push(setTimeout(resolve, 500))
+          })
+        }
+      }
+    }
+
+    displayMessages()
+
+    // Cleanup timeouts
+    return () => {
+      timeoutIds.forEach(id => clearTimeout(id))
+    }
   }, [])
 
   const scrollToBottom = () => {
@@ -146,7 +175,7 @@ export default function Home() {
         },
         body: JSON.stringify({
           message: inputMessage,
-          filename: activePDF
+          filename: chatFile
         })
       })
 
@@ -161,7 +190,16 @@ export default function Home() {
 
       while (true) {
         const { done, value } = await reader.read()
-        if (done) break
+
+        if (done) {
+          // Final update to remove streaming status
+          setMessages(prev => prev.map(msg =>
+            msg.id === assistantMessageId
+              ? { ...msg, content: accumulatedContent, isStreaming: false }
+              : msg
+          ))
+          break
+        }
 
         // Convert the chunk to text
         const chunk = new TextDecoder().decode(value)
@@ -171,7 +209,15 @@ export default function Home() {
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             const data = line.slice(5) // Remove 'data: ' prefix
-            if (data.trim() === '[DONE]') continue
+            if (data.trim() === '[DONE]') {
+              // Final update to remove streaming status
+              setMessages(prev => prev.map(msg =>
+                msg.id === assistantMessageId
+                  ? { ...msg, content: accumulatedContent, isStreaming: false }
+                  : msg
+              ))
+              continue
+            }
 
             try {
               const parsed = JSON.parse(data)
@@ -194,13 +240,6 @@ export default function Home() {
           }
         }
       }
-
-      // Final update to remove streaming status
-      setMessages(prev => prev.map(msg =>
-        msg.id === assistantMessageId
-          ? { ...msg, isStreaming: false }
-          : msg
-      ))
 
     } catch (error) {
       // Handle error
@@ -310,6 +349,7 @@ export default function Home() {
         onSettingsChange={(settings) => {
           setShowTimestamps(settings.showTimestamps)
           setSelectedAvatar(settings.selectedAvatar)
+          setSelectedUserAvatar(settings.selectedUserAvatar)
         }}
       />
 
@@ -390,7 +430,7 @@ export default function Home() {
             {/* Messages */}
             <div
               ref={chatContainerRef}
-              className="flex-1 overflow-y-auto p-6"
+              className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500"
             >
               <div className={`space-y-4 ${!activePDF ? 'max-w-2xl mx-auto' : ''}`}>
                 {messages.map((message) => (
@@ -399,10 +439,10 @@ export default function Home() {
                     message={message}
                     showTimestamp={showTimestamps}
                     selectedAvatar={selectedAvatar}
+                    selectedUserAvatar={selectedUserAvatar}
                     activePDF={activePDF}
                   />
                 ))}
-                {isLoading && <TypingIndicator />}
               </div>
             </div>
 

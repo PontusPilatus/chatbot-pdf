@@ -89,11 +89,19 @@ export default function ChatMessage({ message, showTimestamp = true, selectedAva
                 ? 'bg-blue-500 dark:bg-blue-600 text-white rounded-br-none'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none'}`}
           >
-            {message.content.split('\n').map((line, i) => (
-              <p key={i} className={line.startsWith('•') ? 'ml-4' : ''}>
-                {line}
-              </p>
-            ))}
+            {message.isStreaming ? (
+              <div className="flex space-x-1">
+                <div className="w-1.5 h-1.5 bg-gray-600 dark:bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-1.5 h-1.5 bg-gray-600 dark:bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-1.5 h-1.5 bg-gray-600 dark:bg-gray-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+              </div>
+            ) : (
+              (message.content || '').split('\n').map((line, i) => (
+                <p key={i} className={line.startsWith('•') ? 'ml-4' : ''}>
+                  {line}
+                </p>
+              ))
+            )}
           </div>
 
           {/* Timestamp */}

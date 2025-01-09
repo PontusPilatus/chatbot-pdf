@@ -76,8 +76,7 @@ export default function FileUpload({ onFileProcessed, onSummaryReceived, onUploa
             ? 'border-red-500 bg-red-50 dark:border-red-400 dark:bg-red-900/30'
             : ''}
           hover:border-blue-500 dark:hover:border-blue-400 
-          hover:bg-blue-50 dark:hover:bg-blue-900/30 
-          transition-colors`}
+          hover:bg-blue-50 dark:hover:bg-blue-900/30`}
       >
         <input {...getInputProps()} />
         <div className="flex items-center justify-center space-x-3">
