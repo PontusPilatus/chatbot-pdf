@@ -15,9 +15,11 @@ import { GiBrain, GiRobotGolem, GiArtificialIntelligence, GiCyberEye, GiRobotAnt
 
 interface SidebarProps {
   activePDF: string | null
+  chatFile: string | null
   onFileProcessed: (filename: string) => void
   onSummaryReceived: (summary: string) => void
   onFileSelect: (filename: string) => void
+  onChatFileSelect: (filename: string) => void
   className?: string
   onSettingsChange?: (settings: {
     showTimestamps: boolean,
@@ -27,7 +29,16 @@ interface SidebarProps {
   }) => void
 }
 
-export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived, onFileSelect, className = '', onSettingsChange }: SidebarProps) {
+export default function Sidebar({
+  activePDF,
+  chatFile,
+  onFileProcessed,
+  onSummaryReceived,
+  onFileSelect,
+  onChatFileSelect,
+  className = '',
+  onSettingsChange
+}: SidebarProps) {
   const [activeTab, setActiveTab] = useState('files')
   const [showTimestamps, setShowTimestamps] = useState(false)
   const [autoDeleteFiles, setAutoDeleteFiles] = useState(false)
@@ -139,6 +150,8 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
             <FileList
               onFileSelect={onFileSelect}
               activeFile={activePDF}
+              chatFile={chatFile}
+              onChatFileSelect={onChatFileSelect}
               files={files}
               isLoading={isLoading}
               error={error}

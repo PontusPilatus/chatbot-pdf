@@ -22,12 +22,30 @@ export function PDFJSProvider({ children }: { children: React.ReactNode }) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Load PDF.js script
+    // Check if script is already loaded
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_URL
+      setIsLoaded(true)
+      return
+    }
+
+    // Check if script is already being loaded
+    const existingScript = document.querySelector(`script[src="${PDFJS_URL}"]`)
+    if (existingScript) {
+      existingScript.addEventListener('load', () => {
+        if (window.pdfjsLib) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_URL
+          setIsLoaded(true)
+        }
+      })
+      return
+    }
+
+    // Load PDF.js script if not already loaded or loading
     const script = document.createElement('script')
     script.src = PDFJS_URL
     script.async = true
     script.onload = () => {
-      // Initialize worker after script loads
       if (window.pdfjsLib) {
         window.pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_URL
         setIsLoaded(true)
@@ -39,9 +57,7 @@ export function PDFJSProvider({ children }: { children: React.ReactNode }) {
 
     document.body.appendChild(script)
 
-    return () => {
-      document.body.removeChild(script)
-    }
+    // Don't remove the script on cleanup
   }, [])
 
   return (

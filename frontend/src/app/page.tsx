@@ -46,8 +46,10 @@ export default function Home() {
   const [showTimestamps, setShowTimestamps] = useState(true)
   const [selectedAvatar, setSelectedAvatar] = useState('RiAiGenerate')
   const chatContainerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const [splitPosition, setSplitPosition] = useState(50)
   const [isDragging, setIsDragging] = useState(false)
+  const [chatFile, setChatFile] = useState<string | null>(null)
 
   useEffect(() => {
     // Add welcome messages sequence when component mounts
@@ -101,6 +103,13 @@ export default function Home() {
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Focus input when loading completes
+  useEffect(() => {
+    if (!isLoading) {
+      inputRef.current?.focus()
+    }
+  }, [isLoading])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -292,9 +301,11 @@ export default function Home() {
       {/* Sidebar */}
       <Sidebar
         activePDF={activePDF}
+        chatFile={chatFile}
         onFileProcessed={handleFileProcessed}
         onSummaryReceived={handleSummaryReceived}
         onFileSelect={handleFileSelect}
+        onChatFileSelect={setChatFile}
         className="h-screen w-64 flex-shrink-0"
         onSettingsChange={(settings) => {
           setShowTimestamps(settings.showTimestamps)
@@ -348,25 +359,32 @@ export default function Home() {
                 {activePDF ? (
                   <>
                     <span className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full mr-2"></span>
-                    {activePDF}
+                    <span>Previewing: {activePDF}</span>
+                  </>
+                ) : chatFile ? (
+                  <>
+                    <span className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full mr-2"></span>
+                    {chatFile}
                   </>
                 ) : (
-                  'General Chat'
+                  'Select a file to chat about'
                 )}
               </h2>
-              {messages.length > 0 && (
-                <button
-                  onClick={() => {
-                    const content = convertToMarkdown(messages, activePDF)
-                    const filename = `pdf-pal-chat-${new Date().toISOString().split('T')[0]}.md`
-                    downloadMarkdown(content, filename)
-                  }}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                  title="Download chat history"
-                >
-                  <FiDownload className="w-5 h-5" />
-                </button>
-              )}
+              <div className="flex items-center space-x-4">
+                {messages.length > 0 && (
+                  <button
+                    onClick={() => {
+                      const content = convertToMarkdown(messages, activePDF)
+                      const filename = `pdf-pal-chat-${new Date().toISOString().split('T')[0]}.md`
+                      downloadMarkdown(content, filename)
+                    }}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    title="Download chat history"
+                  >
+                    <FiDownload className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Messages */}
@@ -390,25 +408,27 @@ export default function Home() {
 
             {/* Input Area */}
             <form onSubmit={handleSubmit} className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex space-x-4">
-                <input
-                  type="text"
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  placeholder="Ask a question about your PDF..."
-                  className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500
-                    dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                  disabled={isLoading}
-                />
-                <button
-                  type="submit"
-                  disabled={isLoading || !inputMessage.trim()}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                    focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <FiSend className="w-5 h-5" />
-                </button>
+              <div className={`${!activePDF ? 'max-w-2xl mx-auto' : ''}`}>
+                <div className="flex space-x-4">
+                  <input
+                    ref={inputRef}
+                    type="text"
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    placeholder="Ask a question about your PDF..."
+                    className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500
+                      dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isLoading || !inputMessage.trim()}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                      focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <FiSend className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             </form>
           </div>

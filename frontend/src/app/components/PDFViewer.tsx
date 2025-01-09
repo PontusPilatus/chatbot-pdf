@@ -2,12 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi'
-import Script from 'next/script'
-
-// Use the stable version of PDF.js from CDN
-const PDFJS_VERSION = '3.11.174'
-const PDFJS_URL = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.min.js`
-const WORKER_URL = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${PDFJS_VERSION}/pdf.worker.min.js`
+import { usePDFJS } from '../contexts/PDFJSContext'
 
 interface PDFViewerProps {
   url: string | null
@@ -23,54 +18,116 @@ export default function PDFViewer({ url, filename, className = '' }: PDFViewerPr
   const [scale, setScale] = useState(1.5)
   const [pdf, setPdf] = useState<any>(null)
   const renderTaskRef = useRef<any>(null)
-  const [pdfJSLoaded, setPdfJSLoaded] = useState(false)
+  const loadingTaskRef = useRef<any>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const { isLoaded } = usePDFJS()
+  const isMounted = useRef(true)
 
-  // Load PDF when component mounts or URL changes
+  // Set up mount/unmount tracking
   useEffect(() => {
-    const loadPDF = async () => {
-      if (!canvasRef.current || !window.pdfjsLib || !pdfJSLoaded || !url) return
+    isMounted.current = true
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
 
-      try {
-        setIsLoading(true)
-        setError(null)
+  const cleanupCanvas = () => {
+    if (canvasRef.current) {
+      const context = canvasRef.current.getContext('2d')
+      if (context) {
+        context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height)
+      }
+    }
+  }
 
-        // Set worker source
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_URL
+  const cleanup = async () => {
+    try {
+      // Cancel any ongoing render task
+      if (renderTaskRef.current) {
+        await renderTaskRef.current.cancel()
+        renderTaskRef.current = null
+      }
 
-        // First check if the file exists
-        const fileCheck = await fetch(`http://localhost:8000${url}`)
-        if (!fileCheck.ok) {
-          throw new Error(`Failed to load PDF: ${fileCheck.statusText}`)
+      // Cancel any ongoing loading task
+      if (loadingTaskRef.current) {
+        await loadingTaskRef.current.destroy()
+        loadingTaskRef.current = null
+      }
+
+      // Cleanup PDF
+      if (pdf) {
+        await pdf.destroy()
+        if (isMounted.current) {
+          setPdf(null)
+          setNumPages(0)
+          setCurrentPage(1)
+          setScale(1.5)
+          setError(null)
         }
+      }
 
-        const loadingTask = window.pdfjsLib.getDocument(`http://localhost:8000${url}`)
-        const pdfDoc = await loadingTask.promise
-        setPdf(pdfDoc)
-        setNumPages(pdfDoc.numPages)
-        setCurrentPage(1) // Reset to first page when loading new PDF
-      } catch (err) {
+      cleanupCanvas()
+    } catch (err) {
+      console.error('Cleanup error:', err)
+    }
+  }
+
+  const loadPDF = async () => {
+    if (!canvasRef.current || !window.pdfjsLib || !isLoaded || !url || !isMounted.current) return
+
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      // Clean up previous resources
+      await cleanup()
+
+      if (!isMounted.current) return
+
+      // First check if the file exists
+      const fileCheck = await fetch(`http://localhost:8000${url}`)
+      if (!fileCheck.ok) {
+        throw new Error(`Failed to load PDF: ${fileCheck.statusText}`)
+      }
+
+      if (!isMounted.current) return
+
+      // Create new loading task
+      loadingTaskRef.current = window.pdfjsLib.getDocument(`http://localhost:8000${url}`)
+      const pdfDoc = await loadingTaskRef.current.promise
+
+      if (!isMounted.current) {
+        pdfDoc.destroy()
+        return
+      }
+
+      setPdf(pdfDoc)
+      setNumPages(pdfDoc.numPages)
+      setCurrentPage(1)
+    } catch (err) {
+      if (isMounted.current) {
         console.error('Error loading PDF:', err)
         setError(err instanceof Error ? err.message : 'Failed to load PDF')
-      } finally {
+      }
+    } finally {
+      if (isMounted.current) {
         setIsLoading(false)
       }
     }
+  }
 
+  // Load PDF when component mounts or URL changes
+  useEffect(() => {
     loadPDF()
-
-    // Cleanup
-    return () => {
-      if (pdf) {
-        pdf.destroy()
-      }
-    }
-  }, [url, pdfJSLoaded])
+    return cleanup
+  }, [url, isLoaded])
 
   // Render page when page number changes or PDF is loaded
   useEffect(() => {
+    let isCurrentRender = true
+
     const renderPage = async () => {
-      if (!canvasRef.current || !pdf) return
+      if (!canvasRef.current || !pdf || !isMounted.current) return
 
       try {
         // Cancel any ongoing render task
@@ -79,17 +136,28 @@ export default function PDFViewer({ url, filename, className = '' }: PDFViewerPr
           renderTaskRef.current = null
         }
 
+        if (!isCurrentRender || !isMounted.current) return
+
+        cleanupCanvas()
+
         const page = await pdf.getPage(currentPage)
+
+        if (!isCurrentRender || !isMounted.current) {
+          page.cleanup()
+          return
+        }
+
         const viewport = page.getViewport({ scale })
         const canvas = canvasRef.current
         const context = canvas.getContext('2d')
 
-        if (!context) return
+        if (!context || !isCurrentRender || !isMounted.current) {
+          page.cleanup()
+          return
+        }
 
-        // Clear previous content and reset canvas
         canvas.width = viewport.width
         canvas.height = viewport.height
-        context.clearRect(0, 0, canvas.width, canvas.height)
 
         const renderTask = page.render({
           canvasContext: context,
@@ -99,13 +167,17 @@ export default function PDFViewer({ url, filename, className = '' }: PDFViewerPr
         renderTaskRef.current = renderTask
 
         await renderTask.promise
-        renderTaskRef.current = null
 
-        // Release page resources
+        if (!isCurrentRender || !isMounted.current) {
+          page.cleanup()
+          return
+        }
+
+        renderTaskRef.current = null
         page.cleanup()
 
       } catch (err) {
-        if (err?.type !== 'canvas') { // Ignore canvas errors from cancellation
+        if (err?.type !== 'canvas' && isMounted.current && isCurrentRender) {
           console.error('Error rendering page:', err)
           setError('Failed to render page')
         }
@@ -114,8 +186,8 @@ export default function PDFViewer({ url, filename, className = '' }: PDFViewerPr
 
     renderPage()
 
-    // Cleanup function
     return () => {
+      isCurrentRender = false
       if (renderTaskRef.current) {
         renderTaskRef.current.cancel()
         renderTaskRef.current = null
@@ -149,119 +221,101 @@ export default function PDFViewer({ url, filename, className = '' }: PDFViewerPr
   }
 
   return (
-    <>
-      <Script
-        src={PDFJS_URL}
-        onLoad={() => setPdfJSLoaded(true)}
-        onError={() => setError('Failed to load PDF viewer')}
-      />
-      <div className={`flex flex-col ${className}`}>
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
-              {filename}
-            </h3>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              {numPages > 0 ? `Page ${currentPage} of ${numPages}` : ''}
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={zoomOut}
-              disabled={isLoading}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700
-                text-gray-500 dark:text-gray-400 disabled:opacity-50"
-              title="Zoom out"
-            >
-              -
-            </button>
-            <span className="text-sm text-gray-600 dark:text-gray-300">
-              {Math.round(scale * 100)}%
-            </span>
-            <button
-              onClick={zoomIn}
-              disabled={isLoading}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700
-                text-gray-500 dark:text-gray-400 disabled:opacity-50"
-              title="Zoom in"
-            >
-              +
-            </button>
+    <div className={`flex flex-col ${className}`}>
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center space-x-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
+            {filename}
+          </h3>
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            {numPages > 0 ? `Page ${currentPage} of ${numPages}` : ''}
           </div>
         </div>
-
-        {/* PDF Viewer */}
-        <div className="flex-1 overflow-auto relative bg-gray-100 dark:bg-gray-900">
-          {error ? (
-            <div className="flex flex-col items-center justify-center h-full p-4">
-              <div className="text-red-500 dark:text-red-400 text-center mb-2">
-                {error}
-              </div>
-              <button
-                onClick={() => {
-                  setError(null)
-                  if (url) {
-                    const loadingTask = window.pdfjsLib.getDocument(`http://localhost:8000${url}`)
-                    loadingTask.promise.then(pdfDoc => {
-                      setPdf(pdfDoc)
-                      setNumPages(pdfDoc.numPages)
-                    }).catch(err => {
-                      setError(err instanceof Error ? err.message : 'Failed to load PDF')
-                    })
-                  }
-                }}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-              >
-                Retry
-              </button>
-            </div>
-          ) : isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="flex flex-col items-center space-y-2">
-                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                <p className="text-gray-500 dark:text-gray-400">Loading PDF...</p>
-              </div>
-            </div>
-          ) : (
-            <div className="min-h-full flex items-center justify-center p-4">
-              <canvas
-                ref={canvasRef}
-                className="shadow-lg"
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Navigation Controls */}
-        <div className="flex justify-center items-center p-2 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={prevPage}
-              disabled={currentPage <= 1 || isLoading}
-              className={`p-2 rounded-full transition-colors
-                ${currentPage <= 1 || isLoading
-                  ? 'text-gray-400 dark:text-gray-600'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-            >
-              <FiChevronLeft className="w-5 h-5" />
-            </button>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[3rem] text-center">
-              {currentPage}
-            </span>
-            <button
-              onClick={nextPage}
-              disabled={currentPage >= numPages || isLoading}
-              className={`p-2 rounded-full transition-colors
-                ${currentPage >= numPages || isLoading
-                  ? 'text-gray-400 dark:text-gray-600'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-            >
-              <FiChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={zoomOut}
+            disabled={isLoading}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700
+              text-gray-500 dark:text-gray-400 disabled:opacity-50"
+            title="Zoom out"
+          >
+            -
+          </button>
+          <span className="text-sm text-gray-600 dark:text-gray-300">
+            {Math.round(scale * 100)}%
+          </span>
+          <button
+            onClick={zoomIn}
+            disabled={isLoading}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700
+              text-gray-500 dark:text-gray-400 disabled:opacity-50"
+            title="Zoom in"
+          >
+            +
+          </button>
         </div>
       </div>
-    </>
+
+      {/* PDF Viewer */}
+      <div className="flex-1 overflow-auto relative bg-gray-100 dark:bg-gray-900">
+        {error ? (
+          <div className="flex flex-col items-center justify-center h-full p-4">
+            <div className="text-red-500 dark:text-red-400 text-center mb-2">
+              {error}
+            </div>
+            <button
+              onClick={loadPDF}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            >
+              Retry
+            </button>
+          </div>
+        ) : isLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="flex flex-col items-center space-y-2">
+              <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-gray-500 dark:text-gray-400">Loading PDF...</p>
+            </div>
+          </div>
+        ) : (
+          <div className="min-h-full flex items-center justify-center p-4">
+            <canvas
+              ref={canvasRef}
+              className="shadow-lg"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Navigation Controls */}
+      <div className="flex justify-center items-center p-2 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={prevPage}
+            disabled={currentPage <= 1 || isLoading}
+            className={`p-2 rounded-full transition-colors
+              ${currentPage <= 1 || isLoading
+                ? 'text-gray-400 dark:text-gray-600'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+          >
+            <FiChevronLeft className="w-5 h-5" />
+          </button>
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300 min-w-[3rem] text-center">
+            {currentPage}
+          </span>
+          <button
+            onClick={nextPage}
+            disabled={currentPage >= numPages || isLoading}
+            className={`p-2 rounded-full transition-colors
+              ${currentPage >= numPages || isLoading
+                ? 'text-gray-400 dark:text-gray-600'
+                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+          >
+            <FiChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+    </div>
   )
 } 

@@ -14,6 +14,8 @@ interface FileInfo {
 interface FileListProps {
   onFileSelect: (filename: string) => void
   activeFile: string | null
+  chatFile: string | null
+  onChatFileSelect: (filename: string) => void
   files: FileInfo[]
   isLoading: boolean
   error: string | null
@@ -24,6 +26,8 @@ interface FileListProps {
 export default function FileList({
   onFileSelect,
   activeFile,
+  chatFile,
+  onChatFileSelect,
   files,
   isLoading,
   error,
@@ -100,16 +104,16 @@ export default function FileList({
       {files.map((file) => (
         <div
           key={file.filename}
-          className={`flex items-start p-3 rounded-lg group
+          onClick={() => onChatFileSelect(file.filename)}
+          className={`flex items-start p-3 rounded-lg group cursor-pointer
+            transition-colors duration-150 ease-in-out
             ${activeFile === file.filename
               ? 'bg-blue-50 dark:bg-blue-900/20'
-              : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+              : chatFile === file.filename
+                ? 'bg-gray-100 dark:bg-gray-700'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
         >
-          <div className="w-16 h-20 flex-shrink-0 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-center">
-            <FiFile className="w-8 h-8 text-gray-400 dark:text-gray-500" />
-          </div>
-
-          <div className="ml-3 flex-1 min-w-0">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                 {file.filename}
