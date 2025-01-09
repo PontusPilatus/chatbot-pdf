@@ -14,6 +14,7 @@ interface ChatMessageProps {
   showTimestamp?: boolean
   selectedAvatar?: string
   selectedUserAvatar?: string
+  activePDF?: string | null
 }
 
 const BotAvatars = {
@@ -58,14 +59,14 @@ const UserAvatars = {
   HiSparkles,
 }
 
-export default function ChatMessage({ message, showTimestamp = true, selectedAvatar = 'TbRobot', selectedUserAvatar = 'FiUser' }: ChatMessageProps) {
+export default function ChatMessage({ message, showTimestamp = true, selectedAvatar = 'TbRobot', selectedUserAvatar = 'FiUser', activePDF = null }: ChatMessageProps) {
   const isUser = message.role === 'user'
   const BotIcon = BotAvatars[selectedAvatar as keyof typeof BotAvatars] || TbRobot
   const UserIcon = UserAvatars[selectedUserAvatar as keyof typeof UserAvatars] || FiUser
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`flex items-end space-x-2 max-w-[80%] ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
+      <div className={`flex items-end space-x-2 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
         {/* Avatar */}
         <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-200
           ${isUser
@@ -83,14 +84,13 @@ export default function ChatMessage({ message, showTimestamp = true, selectedAva
           {/* Message Bubble */}
           <div
             style={{ fontSize: 'var(--chat-font-size)' }}
-            className={`px-4 py-3 rounded-2xl break-words transition-colors duration-200
+            className={`px-4 py-3 rounded-2xl break-words transition-colors duration-200 min-w-[60px]
               ${isUser
                 ? 'bg-blue-500 dark:bg-blue-600 text-white rounded-br-none'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none'}`}
           >
             {message.content.split('\n').map((line, i) => (
-              <p key={i} className={`${line.startsWith('•') ? 'ml-4' : ''} 
-                ${!isUser && line.startsWith('•') ? 'text-gray-700 dark:text-gray-300' : ''}`}>
+              <p key={i} className={line.startsWith('•') ? 'ml-4' : ''}>
                 {line}
               </p>
             ))}

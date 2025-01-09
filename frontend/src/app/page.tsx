@@ -5,7 +5,7 @@ import ChatMessage from './components/ChatMessage'
 import { ChatMessage as ChatMessageType } from '@/types/chat'
 import { v4 as uuidv4 } from 'uuid'
 import Sidebar from './components/Sidebar'
-import { FiSend, FiDownload } from 'react-icons/fi'
+import { FiSend, FiDownload, FiX } from 'react-icons/fi'
 import { RiAiGenerate, RiRobotFill, RiOpenaiFill, RiRobot2Fill, RiMindMap } from 'react-icons/ri'
 import { HiSparkles, HiLightBulb } from 'react-icons/hi'
 import { BiBrain } from 'react-icons/bi'
@@ -206,13 +206,16 @@ export default function Home() {
   }
 
   const handleFileProcessed = (filename: string) => {
-    setActivePDF(filename);
     setMessages(prev => [...prev, {
       id: uuidv4(),
       role: 'assistant',
-      content: `I've received your PDF: ${filename}. You can now ask questions about its contents.`,
+      content: `I've received your PDF: ${filename}. Click the preview button in the file list to view it.`,
       timestamp: new Date().toISOString()
     }]);
+  };
+
+  const handleFileSelect = (filename: string) => {
+    setActivePDF(filename);
   };
 
   const handleSummaryReceived = (summary: string) => {
@@ -291,6 +294,7 @@ export default function Home() {
         activePDF={activePDF}
         onFileProcessed={handleFileProcessed}
         onSummaryReceived={handleSummaryReceived}
+        onFileSelect={handleFileSelect}
         className="h-screen w-64 flex-shrink-0"
         onSettingsChange={(settings) => {
           setShowTimestamps(settings.showTimestamps)
@@ -301,30 +305,41 @@ export default function Home() {
       {/* Main Content Area */}
       <div className="flex-1 flex min-h-0 relative main-content-area">
         {/* PDF Viewer */}
-        <div
-          className="h-full"
-          style={{ width: `${splitPosition}%` }}
-        >
-          <PDFViewer
-            url={activePDF ? `/uploads/${activePDF}` : null}
-            filename={activePDF}
-            className="h-full border-r border-gray-200 dark:border-gray-700"
-          />
-        </div>
+        {activePDF && (
+          <>
+            <div
+              className="h-full relative"
+              style={{ width: `${splitPosition}%` }}
+            >
+              <button
+                onClick={() => setActivePDF(null)}
+                className="absolute top-2 right-2 p-1.5 rounded-lg bg-white dark:bg-gray-700 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 shadow-sm border border-gray-200 dark:border-gray-600 z-10"
+                title="Close PDF"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+              <PDFViewer
+                url={`/uploads/${activePDF}`}
+                filename={activePDF}
+                className="h-full border-r border-gray-200 dark:border-gray-700"
+              />
+            </div>
 
-        {/* Resizable Divider */}
-        <div
-          className="absolute top-0 bottom-0 w-1 cursor-col-resize bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-150"
-          style={{ left: `${splitPosition}%` }}
-          onMouseDown={handleDragStart}
-          onDoubleClick={() => setSplitPosition(50)}
-          title="Double click to reset"
-        />
+            {/* Resizable Divider */}
+            <div
+              className="absolute top-0 bottom-0 w-1 cursor-col-resize bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 dark:hover:bg-blue-600 transition-colors duration-150"
+              style={{ left: `${splitPosition}%` }}
+              onMouseDown={handleDragStart}
+              onDoubleClick={() => setSplitPosition(50)}
+              title="Double click to reset"
+            />
+          </>
+        )}
 
         {/* Chat Area */}
         <div
           className="h-full bg-white dark:bg-gray-800"
-          style={{ width: `${100 - splitPosition}%` }}
+          style={{ width: activePDF ? `${100 - splitPosition}%` : '100%' }}
         >
           <div className="h-full flex flex-col">
             {/* Chat Header */}
@@ -357,17 +372,20 @@ export default function Home() {
             {/* Messages */}
             <div
               ref={chatContainerRef}
-              className="flex-1 overflow-y-auto p-6 space-y-4"
+              className="flex-1 overflow-y-auto p-6"
             >
-              {messages.map((message) => (
-                <ChatMessage
-                  key={message.id}
-                  message={message}
-                  showTimestamp={showTimestamps}
-                  selectedAvatar={selectedAvatar}
-                />
-              ))}
-              {isLoading && <TypingIndicator />}
+              <div className={`space-y-4 ${!activePDF ? 'max-w-2xl mx-auto' : ''}`}>
+                {messages.map((message) => (
+                  <ChatMessage
+                    key={message.id}
+                    message={message}
+                    showTimestamp={showTimestamps}
+                    selectedAvatar={selectedAvatar}
+                    activePDF={activePDF}
+                  />
+                ))}
+                {isLoading && <TypingIndicator />}
+              </div>
             </div>
 
             {/* Input Area */}

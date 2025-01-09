@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { FiFile, FiTrash2, FiClock } from 'react-icons/fi'
+import { FiFile, FiTrash2, FiClock, FiEye } from 'react-icons/fi'
 import DeleteFileModal from './DeleteFileModal'
 
 interface FileInfo {
@@ -35,6 +35,11 @@ export default function FileList({
   const handleDelete = async (filename: string, e: React.MouseEvent) => {
     e.stopPropagation() // Prevent file selection when clicking delete
     setSelectedFile({ id: filename, name: filename })
+  }
+
+  const handlePreview = (filename: string, e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent file selection when clicking preview
+    onFileSelect(filename)
   }
 
   const handleConfirmDelete = async () => {
@@ -95,8 +100,7 @@ export default function FileList({
       {files.map((file) => (
         <div
           key={file.filename}
-          onClick={() => onFileSelect(file.filename)}
-          className={`flex items-start p-3 rounded-lg cursor-pointer group
+          className={`flex items-start p-3 rounded-lg group
             ${activeFile === file.filename
               ? 'bg-blue-50 dark:bg-blue-900/20'
               : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
@@ -111,6 +115,16 @@ export default function FileList({
                 {file.filename}
               </p>
               <div className="flex items-center space-x-1">
+                <button
+                  onClick={(e) => handlePreview(file.filename, e)}
+                  className={`p-1 rounded-lg opacity-0 group-hover:opacity-100
+                    hover:bg-blue-50 dark:hover:bg-blue-900/20
+                    text-blue-500 dark:text-blue-400
+                    ${activeFile === file.filename ? '!opacity-100' : ''}`}
+                  title={activeFile === file.filename ? 'Currently previewing' : 'Preview file'}
+                >
+                  <FiEye className="w-4 h-4" />
+                </button>
                 <button
                   onClick={(e) => handleDelete(file.filename, e)}
                   className="p-1 rounded-lg opacity-0 group-hover:opacity-100

@@ -5,7 +5,7 @@ import FileUpload from './FileUpload'
 import FileList from './FileList'
 import { useTheme } from '../contexts/ThemeContext'
 import { useFileList } from '../hooks/useFileList'
-import { FiUser, FiUpload, FiList, FiSettings, FiInfo, FiSun, FiMoon, FiClock, FiTrash2, FiGlobe, FiChevronDown } from 'react-icons/fi'
+import { FiUser, FiUpload, FiList, FiSettings, FiInfo, FiSun, FiMoon, FiClock, FiTrash2, FiGlobe, FiChevronDown, FiX } from 'react-icons/fi'
 import { RiRobotFill, RiOpenaiFill, RiRobot2Fill, RiRobotLine, RiAliensFill, RiSpaceShipFill, RiUserSmileLine, RiUserHeartLine, RiUserStarLine, RiUserSettingsLine, RiUserSearchLine, RiUserLocationLine, RiUserFollowLine, RiUserSharedLine, RiUserVoiceLine, RiEarthLine } from 'react-icons/ri'
 import { HiSparkles } from 'react-icons/hi'
 import { BiBrain, BiUserCircle, BiUserPin, BiUserCheck } from 'react-icons/bi'
@@ -17,6 +17,7 @@ interface SidebarProps {
   activePDF: string | null
   onFileProcessed: (filename: string) => void
   onSummaryReceived: (summary: string) => void
+  onFileSelect: (filename: string) => void
   className?: string
   onSettingsChange?: (settings: {
     showTimestamps: boolean,
@@ -26,7 +27,7 @@ interface SidebarProps {
   }) => void
 }
 
-export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived, className = '', onSettingsChange }: SidebarProps) {
+export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived, onFileSelect, className = '', onSettingsChange }: SidebarProps) {
   const [activeTab, setActiveTab] = useState('files')
   const [showTimestamps, setShowTimestamps] = useState(false)
   const [autoDeleteFiles, setAutoDeleteFiles] = useState(false)
@@ -117,53 +118,17 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
   ]
 
   return (
-    <div className={`flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 w-80 flex-shrink-0 ${className}`}>
+    <div className={`flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 w-[320px] ${className}`}>
       {/* Sidebar Header */}
       <div className="h-16 border-b border-gray-200 dark:border-gray-700 flex items-center px-4">
         <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-200">PDF Pal</h1>
       </div>
 
-      {/* Navigation Tabs */}
-      <div className="flex items-center space-x-2 p-2 bg-gray-50 dark:bg-gray-800/50">
-        <button
-          onClick={() => setActiveTab('files')}
-          className={`flex items-center justify-center flex-1 px-3 py-2 rounded-lg text-sm font-medium
-            transition-colors duration-150 ease-in-out
-            ${activeTab === 'files'
-              ? 'bg-blue-500 text-white shadow-sm'
-              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-        >
-          <FiList className="w-4 h-4 mr-2" />
-          Files
-        </button>
-        <button
-          onClick={() => setActiveTab('settings')}
-          className={`flex items-center justify-center flex-1 px-3 py-2 rounded-lg text-sm font-medium
-            transition-colors duration-150 ease-in-out
-            ${activeTab === 'settings'
-              ? 'bg-blue-500 text-white shadow-sm'
-              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-        >
-          <FiSettings className="w-4 h-4 mr-2" />
-          Settings
-        </button>
-        <button
-          onClick={() => setActiveTab('about')}
-          className={`flex items-center justify-center flex-1 px-3 py-2 rounded-lg text-sm font-medium
-            transition-colors duration-150 ease-in-out
-            ${activeTab === 'about'
-              ? 'bg-blue-500 text-white shadow-sm'
-              : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-        >
-          <FiInfo className="w-4 h-4 mr-2" />
-          About
-        </button>
-      </div>
-
-      {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto">
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Files Section */}
         {activeTab === 'files' && (
-          <div className="flex flex-col">
+          <div className="flex-1 overflow-y-auto">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <FileUpload
                 onFileProcessed={onFileProcessed}
@@ -172,7 +137,7 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
               />
             </div>
             <FileList
-              onFileSelect={handleFileSelect}
+              onFileSelect={onFileSelect}
               activeFile={activePDF}
               files={files}
               isLoading={isLoading}
@@ -182,338 +147,386 @@ export default function Sidebar({ activePDF, onFileProcessed, onSummaryReceived,
             />
           </div>
         )}
+
+        {/* Settings Section */}
         {activeTab === 'settings' && (
-          <div className="p-4 space-y-6">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                Settings
-              </h2>
-            </div>
-
-            {/* Appearance Section */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Appearance
-              </h3>
-              <div className="space-y-3">
-                {/* Theme Toggle */}
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    {isDarkMode ? (
-                      <FiMoon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                    ) : (
-                      <FiSun className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                    )}
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      {isDarkMode ? 'Dark Mode' : 'Light Mode'}
-                    </span>
-                  </div>
-                  <button
-                    onClick={toggleDarkMode}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full
-                      transition-colors duration-200 ease-in-out focus:outline-none
-                      ${isDarkMode ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'}`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow
-                        transition-transform duration-200 ease-in-out
-                        ${isDarkMode ? 'translate-x-6' : 'translate-x-1'}`}
-                    />
-                  </button>
-                </div>
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 space-y-6">
+              {/* Header with Close Button */}
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Settings</h2>
+                <button
+                  onClick={() => setActiveTab('files')}
+                  className="p-1 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
               </div>
-            </div>
 
-            {/* Text Size */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Text Size
-              </h3>
-              <div className="space-y-3">
-                <div className="flex flex-col space-y-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      Font Size: {fontSize}px
-                    </span>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => setFontSize(Math.max(12, fontSize - 1))}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center
-                          bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 
-                          hover:bg-gray-100 dark:hover:bg-gray-600
-                          border border-gray-200 dark:border-gray-600"
-                      >
-                        -
-                      </button>
-                      <button
-                        onClick={() => setFontSize(Math.min(24, fontSize + 1))}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center
-                          bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 
-                          hover:bg-gray-100 dark:hover:bg-gray-600
-                          border border-gray-200 dark:border-gray-600"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                  <input
-                    type="range"
-                    min="12"
-                    max="24"
-                    value={fontSize}
-                    onChange={(e) => setFontSize(parseInt(e.target.value))}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
-                    <span>Small</span>
-                    <span>Large</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Chat Settings */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                Chat Settings
-              </h3>
-              <div className="space-y-3">
-                {/* Avatar Selection */}
-                <div className="flex flex-col space-y-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div className="flex items-center justify-between">
+              {/* Appearance Section */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Appearance
+                </h3>
+                <div className="space-y-3">
+                  {/* Theme Toggle */}
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                     <div className="flex items-center space-x-3">
-                      {(() => {
-                        const Icon = botAvatarOptions.find(opt => opt.id === selectedAvatar)?.icon || TbRobot
-                        return <Icon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                      })()}
+                      {isDarkMode ? (
+                        <FiMoon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                      ) : (
+                        <FiSun className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                      )}
                       <span className="text-sm text-gray-700 dark:text-gray-300">
-                        Bot Avatar
+                        {isDarkMode ? 'Dark Mode' : 'Light Mode'}
                       </span>
                     </div>
-                    <div className="relative group" ref={avatarDropdownRef}>
-                      <button
-                        className="p-2 rounded-lg flex items-center justify-center
-                          bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 
-                          hover:bg-gray-100 dark:hover:bg-gray-600
-                          border border-gray-200 dark:border-gray-600"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setIsAvatarDropdownOpen(!isAvatarDropdownOpen)
-                        }}
-                      >
-                        <FiChevronDown className="w-4 h-4" />
-                      </button>
-                      {isAvatarDropdownOpen && (
-                        <div
-                          className="absolute right-0 mt-2 p-2 bg-white dark:bg-gray-700 rounded-lg shadow-lg
-                            border border-gray-200 dark:border-gray-600 z-50"
-                          style={{ width: '256px' }} // 4 icons * (48px + gap) per row
-                        >
-                          <div className="grid grid-cols-4 gap-2">
-                            {botAvatarOptions.map((option) => {
-                              const Icon = option.icon
-                              return (
-                                <button
-                                  key={option.id}
-                                  onClick={() => {
-                                    updateSelectedAvatar(option.id)
-                                    setIsAvatarDropdownOpen(false)
-                                  }}
-                                  className={`p-2 rounded-lg flex items-center justify-center transition-colors duration-200
-                                    ${selectedAvatar === option.id
-                                      ? 'bg-blue-500 text-white'
-                                      : 'bg-gray-50 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500'}`}
-                                  title={option.name}
-                                >
-                                  <Icon className="w-5 h-5" />
-                                </button>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <button
+                      onClick={toggleDarkMode}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full
+                        transition-colors duration-200 ease-in-out focus:outline-none
+                        ${isDarkMode ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-600'}`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow
+                          transition-transform duration-200 ease-in-out
+                          ${isDarkMode ? 'translate-x-6' : 'translate-x-1'}`}
+                      />
+                    </button>
                   </div>
-                </div>
-
-                {/* User Avatar Selection */}
-                <div className="flex flex-col space-y-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      {(() => {
-                        const Icon = userAvatarOptions.find(opt => opt.id === selectedUserAvatar)?.icon || FiUser
-                        return <Icon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                      })()}
-                      <span className="text-sm text-gray-700 dark:text-gray-300">
-                        User Avatar
-                      </span>
-                    </div>
-                    <div className="relative group" ref={userAvatarDropdownRef}>
-                      <button
-                        className="p-2 rounded-lg flex items-center justify-center
-                          bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 
-                          hover:bg-gray-100 dark:hover:bg-gray-600
-                          border border-gray-200 dark:border-gray-600"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          setIsUserAvatarDropdownOpen(!isUserAvatarDropdownOpen)
-                        }}
-                      >
-                        <FiChevronDown className="w-4 h-4" />
-                      </button>
-                      {isUserAvatarDropdownOpen && (
-                        <div
-                          className="absolute right-0 mt-2 p-2 bg-white dark:bg-gray-700 rounded-lg shadow-lg
-                            border border-gray-200 dark:border-gray-600 z-50"
-                          style={{ width: '256px' }}
-                        >
-                          <div className="grid grid-cols-4 gap-2">
-                            {userAvatarOptions.map((option) => {
-                              const Icon = option.icon
-                              return (
-                                <button
-                                  key={option.id}
-                                  onClick={() => {
-                                    updateSelectedUserAvatar(option.id)
-                                    setIsUserAvatarDropdownOpen(false)
-                                  }}
-                                  className={`p-2 rounded-lg flex items-center justify-center transition-colors duration-200
-                                    ${selectedUserAvatar === option.id
-                                      ? 'bg-blue-500 text-white'
-                                      : 'bg-gray-50 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500'}`}
-                                  title={option.name}
-                                >
-                                  <Icon className="w-5 h-5" />
-                                </button>
-                              )
-                            })}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Message Display */}
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <FiClock className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                      Timestamps
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => updateShowTimestamps(!showTimestamps)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full
-                      transition-colors duration-200 ease-in-out focus:outline-none
-                      ${showTimestamps ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'}`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow
-                        transition-transform duration-200 ease-in-out
-                        ${showTimestamps ? 'translate-x-6' : 'translate-x-1'}`}
-                    />
-                  </button>
                 </div>
               </div>
-            </div>
 
-            {/* File Management */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                File Management
-              </h3>
-              <div className="space-y-3">
-                {/* Auto-delete Files */}
-                <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <FiTrash2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                    <div className="flex flex-col">
+              {/* Text Size */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Text Size
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex flex-col space-y-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-700 dark:text-gray-300">
-                        {autoDeleteFiles ? 'Auto-delete Enabled' : 'Auto-delete Disabled'}
+                        Font Size: {fontSize}px
                       </span>
-                      <span className="text-xs text-gray-500 dark:text-gray-400">
-                        {autoDeleteFiles ? 'Files will be deleted after 30 days' : 'Files will be kept indefinitely'}
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setFontSize(Math.max(12, fontSize - 1))}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center
+                            bg-white dark:bg-gray-600 text-gray-600 dark:text-gray-300 
+                            hover:bg-gray-100 dark:hover:bg-gray-500
+                            border border-gray-200 dark:border-gray-500"
+                        >
+                          -
+                        </button>
+                        <button
+                          onClick={() => setFontSize(Math.min(24, fontSize + 1))}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center
+                            bg-white dark:bg-gray-600 text-gray-600 dark:text-gray-300
+                            hover:bg-gray-100 dark:hover:bg-gray-500
+                            border border-gray-200 dark:border-gray-500"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                    <input
+                      type="range"
+                      min="12"
+                      max="24"
+                      value={fontSize}
+                      onChange={(e) => setFontSize(parseInt(e.target.value))}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+                      <span>Small</span>
+                      <span>Large</span>
                     </div>
                   </div>
-                  <button
-                    onClick={() => updateAutoDeleteFiles(!autoDeleteFiles)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full
-                      transition-colors duration-200 ease-in-out focus:outline-none
-                      ${autoDeleteFiles ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'}`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow
-                        transition-transform duration-200 ease-in-out
-                        ${autoDeleteFiles ? 'translate-x-6' : 'translate-x-1'}`}
-                    />
-                  </button>
+                </div>
+              </div>
+
+              {/* Chat Settings */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Chat Settings
+                </h3>
+                <div className="space-y-3">
+                  {/* Avatar Selection */}
+                  <div className="flex flex-col space-y-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        {(() => {
+                          const Icon = botAvatarOptions.find(opt => opt.id === selectedAvatar)?.icon || TbRobot
+                          return <Icon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                        })()}
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          Bot Avatar
+                        </span>
+                      </div>
+                      <div className="relative group" ref={avatarDropdownRef}>
+                        <button
+                          className="p-2 rounded-lg flex items-center justify-center
+                            bg-white dark:bg-gray-600 text-gray-600 dark:text-gray-300 
+                            hover:bg-gray-100 dark:hover:bg-gray-500
+                            border border-gray-200 dark:border-gray-500"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setIsAvatarDropdownOpen(!isAvatarDropdownOpen)
+                          }}
+                        >
+                          <FiChevronDown className="w-4 h-4" />
+                        </button>
+                        {isAvatarDropdownOpen && (
+                          <div
+                            className="absolute right-0 mt-2 p-2 bg-white dark:bg-gray-700 rounded-lg shadow-lg
+                              border border-gray-200 dark:border-gray-600 z-50"
+                            style={{ width: '256px' }}
+                          >
+                            <div className="grid grid-cols-4 gap-2">
+                              {botAvatarOptions.map((option) => {
+                                const Icon = option.icon
+                                return (
+                                  <button
+                                    key={option.id}
+                                    onClick={() => {
+                                      updateSelectedAvatar(option.id)
+                                      setIsAvatarDropdownOpen(false)
+                                    }}
+                                    className={`p-2 rounded-lg flex items-center justify-center transition-colors duration-200
+                                      ${selectedAvatar === option.id
+                                        ? 'bg-blue-500 text-white'
+                                        : 'bg-gray-50 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500'}`}
+                                    title={option.name}
+                                  >
+                                    <Icon className="w-5 h-5" />
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* User Avatar Selection */}
+                  <div className="flex flex-col space-y-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        {(() => {
+                          const Icon = userAvatarOptions.find(opt => opt.id === selectedUserAvatar)?.icon || FiUser
+                          return <Icon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                        })()}
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          User Avatar
+                        </span>
+                      </div>
+                      <div className="relative group" ref={userAvatarDropdownRef}>
+                        <button
+                          className="p-2 rounded-lg flex items-center justify-center
+                            bg-white dark:bg-gray-600 text-gray-600 dark:text-gray-300 
+                            hover:bg-gray-100 dark:hover:bg-gray-500
+                            border border-gray-200 dark:border-gray-500"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setIsUserAvatarDropdownOpen(!isUserAvatarDropdownOpen)
+                          }}
+                        >
+                          <FiChevronDown className="w-4 h-4" />
+                        </button>
+                        {isUserAvatarDropdownOpen && (
+                          <div
+                            className="absolute right-0 mt-2 p-2 bg-white dark:bg-gray-700 rounded-lg shadow-lg
+                              border border-gray-200 dark:border-gray-600 z-50"
+                            style={{ width: '256px' }}
+                          >
+                            <div className="grid grid-cols-4 gap-2">
+                              {userAvatarOptions.map((option) => {
+                                const Icon = option.icon
+                                return (
+                                  <button
+                                    key={option.id}
+                                    onClick={() => {
+                                      updateSelectedUserAvatar(option.id)
+                                      setIsUserAvatarDropdownOpen(false)
+                                    }}
+                                    className={`p-2 rounded-lg flex items-center justify-center transition-colors duration-200
+                                      ${selectedUserAvatar === option.id
+                                        ? 'bg-blue-500 text-white'
+                                        : 'bg-gray-50 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-500'}`}
+                                    title={option.name}
+                                  >
+                                    <Icon className="w-5 h-5" />
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Message Display */}
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <FiClock className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                        Timestamps
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => updateShowTimestamps(!showTimestamps)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full
+                        transition-colors duration-200 ease-in-out focus:outline-none
+                        ${showTimestamps ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-600'}`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow
+                          transition-transform duration-200 ease-in-out
+                          ${showTimestamps ? 'translate-x-6' : 'translate-x-1'}`}
+                      />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* File Management */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  File Management
+                </h3>
+                <div className="space-y-3">
+                  {/* Auto-delete Files */}
+                  <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <FiTrash2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                      <div className="flex flex-col">
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          {autoDeleteFiles ? 'Auto-delete Enabled' : 'Auto-delete Disabled'}
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {autoDeleteFiles ? 'Files will be deleted after 30 days' : 'Files will be kept indefinitely'}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => updateAutoDeleteFiles(!autoDeleteFiles)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full
+                        transition-colors duration-200 ease-in-out focus:outline-none
+                        ${autoDeleteFiles ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-600'}`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow
+                          transition-transform duration-200 ease-in-out
+                          ${autoDeleteFiles ? 'translate-x-6' : 'translate-x-1'}`}
+                      />
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         )}
+
+        {/* About Section */}
         {activeTab === 'about' && (
-          <div className="p-4 space-y-6">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
-                About PDF Pal
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                An intelligent companion designed to help you interact with and understand PDF documents through natural conversation.
-              </p>
-            </div>
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 space-y-6">
+              {/* Header with Close Button */}
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">About PDF Pal</h2>
+                <button
+                  onClick={() => setActiveTab('files')}
+                  className="p-1 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+              </div>
 
-            <div>
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Key Features
-              </h3>
-              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Smart PDF processing with automatic text extraction and chunking</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Context-aware responses using advanced AI technology</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Real-time streaming responses for faster interactions</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Efficient file management with upload tracking</span>
-                </li>
-              </ul>
-            </div>
+              <div className="prose dark:prose-invert">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  An intelligent companion designed to help you interact with and understand PDF documents through natural conversation.
+                </p>
 
-            <div>
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Technologies
-              </h3>
-              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Next.js & TypeScript for the frontend</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>Python & FastAPI for the backend</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>OpenAI's GPT for intelligent responses</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="mr-2">•</span>
-                  <span>ChromaDB for efficient document storage</span>
-                </li>
-              </ul>
+                <div className="mt-6">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Key Features</h3>
+                  <ul className="mt-2 space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Smart PDF processing with automatic text extraction and chunking</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Context-aware responses using advanced AI technology</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Real-time streaming responses for faster interactions</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Efficient file management with upload tracking</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="mt-6">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Technologies</h3>
+                  <ul className="mt-2 space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Next.js & TypeScript for the frontend</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Python & FastAPI for the backend</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>OpenAI's GPT for intelligent responses</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>ChromaDB for efficient document storage</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="mt-6">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Version</h3>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">1.0.0</p>
+                </div>
+              </div>
             </div>
           </div>
         )}
+
+        {/* Bottom Navigation */}
+        <div className="border-t border-gray-200 dark:border-gray-700 p-2 space-y-2">
+          <button
+            onClick={() => setActiveTab(activeTab === 'settings' ? 'files' : 'settings')}
+            className={`w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium
+              transition-colors duration-150 ease-in-out
+              ${activeTab === 'settings'
+                ? 'bg-blue-500 text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+          >
+            <FiSettings className="w-4 h-4 mr-2" />
+            Settings
+          </button>
+          <button
+            onClick={() => setActiveTab(activeTab === 'about' ? 'files' : 'about')}
+            className={`w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium
+              transition-colors duration-150 ease-in-out
+              ${activeTab === 'about'
+                ? 'bg-blue-500 text-white shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+          >
+            <FiInfo className="w-4 h-4 mr-2" />
+            About
+          </button>
+        </div>
       </div>
     </div>
   )
