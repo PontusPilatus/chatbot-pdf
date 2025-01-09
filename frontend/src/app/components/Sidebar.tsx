@@ -18,7 +18,7 @@ interface SidebarProps {
   chatFile: string | null
   onFileProcessed: (filename: string) => void
   onSummaryReceived: (summary: string) => void
-  onFileSelect: (filename: string) => void
+  onFileSelect: (filename: string | null) => void
   onChatFileSelect: (filename: string) => void
   className?: string
   onSettingsChange?: (settings: {
@@ -57,8 +57,10 @@ export default function Sidebar({
     await fetchFiles(true)
   }, [clearCache, fetchFiles])
 
-  const handleFileSelect = (filename: string) => {
-    onFileProcessed(filename)
+  const handleFileSelect = (filename: string | null) => {
+    if (filename) {
+      onFileProcessed(filename)
+    }
   }
 
   // Update parent component when settings change
