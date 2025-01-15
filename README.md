@@ -10,6 +10,28 @@ An AI-powered companion that can answer questions about PDF documents. Built wit
   - Vector embeddings for semantic search
   - ChromaDB for efficient document storage
   - Multi-language support with automatic language detection
+  - OCR (Optical Character Recognition) support for:
+    - Scanned documents
+    - Image-based PDFs
+    - PDFs with embedded images
+  - Support for 26+ languages including:
+    - English (eng)
+    - Swedish (swe)
+    - German (deu)
+    - French (fra)
+    - Spanish (spa)
+    - Italian (ita)
+    - Portuguese (por)
+    - Dutch (nld)
+    - Polish (pol)
+    - Russian (rus)
+    - Ukrainian (ukr)
+    - Arabic (ara)
+    - Hindi (hin)
+    - Japanese (jpn)
+    - Korean (kor)
+    - Chinese Simplified (chi_sim)
+    - And more...
 
 - 💬 Chat Interface
   - Interactive real-time chat with streaming responses
@@ -78,7 +100,24 @@ The frontend will be available at `http://localhost:3000`
    cd backend
    ```
 
-2. Create and activate a virtual environment:
+2. Install Required Dependencies:
+   - Install Tesseract OCR:
+     - Windows: Download and install from https://github.com/UB-Mannheim/tesseract/wiki
+     - Linux: `sudo apt-get install tesseract-ocr`
+     - Mac: `brew install tesseract`
+   
+   - Install Poppler:
+     - Windows: Download from https://github.com/oschwartz10612/poppler-windows/releases/
+     - Linux: `sudo apt-get install poppler-utils`
+     - Mac: `brew install poppler`
+
+3. Install Language Data (Optional):
+   - Download additional language data files from https://github.com/tesseract-ocr/tessdata/
+   - Place the `.traineddata` files in Tesseract's tessdata directory:
+     - Windows: `C:\Program Files\Tesseract-OCR\tessdata\`
+     - Linux/Mac: `/usr/share/tesseract-ocr/tessdata/`
+
+4. Create and activate a virtual environment:
    - Windows:
      ```bash
      python -m venv venv
@@ -90,12 +129,12 @@ The frontend will be available at `http://localhost:3000`
      source venv/bin/activate
      ```
 
-3. Install dependencies:
+5. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. Run the FastAPI server:
+6. Run the FastAPI server:
    ```bash
    cd app
    uvicorn main:app --reload

@@ -72,10 +72,42 @@ class PDFProcessor:
             lang_map = {
                 'sv': 'swe',  # Swedish
                 'en': 'eng',  # English
+                'de': 'deu',  # German
+                'fr': 'fra',  # French
+                'es': 'spa',  # Spanish
+                'it': 'ita',  # Italian
+                'pt': 'por',  # Portuguese
+                'nl': 'nld',  # Dutch
+                'pl': 'pol',  # Polish
+                'ru': 'rus',  # Russian
+                'uk': 'ukr',  # Ukrainian
+                'ar': 'ara',  # Arabic
+                'hi': 'hin',  # Hindi
+                'ja': 'jpn',  # Japanese
+                'ko': 'kor',  # Korean
+                'zh': 'chi_sim',  # Simplified Chinese
+                'da': 'dan',  # Danish
+                'fi': 'fin',  # Finnish
+                'no': 'nor',  # Norwegian
+                'tr': 'tur',  # Turkish
+                'cs': 'ces',  # Czech
+                'hu': 'hun',  # Hungarian
+                'el': 'ell',  # Greek
+                'he': 'heb',  # Hebrew
+                'th': 'tha',  # Thai
+                'vi': 'vie',  # Vietnamese
             }
+            
             # Get Tesseract language code
             tesseract_lang = lang_map.get(language, 'eng')
             logger.info(f"Using Tesseract language: {tesseract_lang}")
+            
+            # If multiple languages are detected, try to use them all
+            if ',' in language:
+                # Split multiple languages and map each one
+                langs = [lang_map.get(lang.strip(), 'eng') for lang in language.split(',')]
+                # Remove duplicates and join with plus sign (Tesseract format)
+                tesseract_lang = '+'.join(sorted(set(langs)))
             
             with tempfile.TemporaryDirectory() as temp_dir:
                 # Convert PDF to images
