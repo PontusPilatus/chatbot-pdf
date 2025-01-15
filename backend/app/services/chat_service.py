@@ -9,6 +9,7 @@ import json
 import tiktoken
 import re
 from langdetect import detect, LangDetectException
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -27,12 +28,25 @@ class Conversation:
         self.messages: List[Message] = []
         self.max_messages = max_messages
         self.current_language = 'en'
+        self.language_locked = False  # Track if language has been set
 
     def add_message(self, role: str, content: str):
         message = Message(role, content)
         self.messages.append(message)
-        if role == 'user':  # Update language only based on user messages
-            self.current_language = message.language
+        
+        # Only update language based on user messages
+        if role == 'user':
+            try:
+                detected_lang = detect(content) if content.strip() else self.current_language
+                # Only update language if it's different and not locked
+                if not self.language_locked or detected_lang != self.current_language:
+                    self.current_language = detected_lang
+                    self.language_locked = True  # Lock language after first detection
+            except LangDetectException:
+                # Keep current language if detection fails
+                pass
+
+        # Maintain conversation history
         if len(self.messages) > self.max_messages:
             self.messages.pop(0)
 
@@ -141,184 +155,138 @@ class ChatService:
         self.client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.usage_control = UsageControl()
         self.max_context_tokens = 4000  # Maximum tokens for context (leaving room for response)
-        self.system_prompt = """Welcome! I'm your multilingual PDF assistant. Feel free to ask questions in any language you're comfortable with.
+        self.vector_store = vector_store  # Import the singleton instance
+        self.system_prompt = """You are a helpful multilingual PDF assistant. You will:
+        1. Answer questions based on the provided PDF context
+        2. Always respond in the same language as the user's question
+        3. If you can't access the document or find relevant information, explain this clearly
+        4. Never switch languages unless the user does
+        5. Be consistent in your responses
+        6. If you see [Error: ...] or [Document: ...] messages, explain the issue clearly in the user's language
+        
+        Remember: Stay in the user's chosen language throughout the entire conversation."""
 
-        When working with PDFs, I will:
-        1. Answer questions based on the provided context from the PDF
-        2. If I don't know the answer or the context doesn't contain relevant information, I'll say so
-        3. Be concise and clear in my responses
-        4. If the context is not relevant to the question, I'll let you know
-        5. Maintain conversation continuity by referring to previous context when relevant
-        6. When citing information, mention the page number if available
-        7. Base my answers strictly on the provided context, not on general knowledge
-        8. Communicate in your preferred language throughout our conversation
-        """
-
-    async def get_relevant_context(self, query: str, filename: str, conversation: Conversation) -> str:
-        """Get relevant context from the vector store with smart token management."""
+    async def get_relevant_context(self, query: str, filename: str | None = None) -> str:
+        """Get relevant context for the query from vector store."""
         try:
-            # Get similar chunks from vector store
-            results = await vector_store.similarity_search(
-                collection_name=filename,
-                query=query,
-                k=8  # Get more chunks initially, we'll filter based on relevance and tokens
-            )
-            
-            if not results:
+            if not filename:
                 return ""
 
-            # Get conversation history with token count
-            conv_history = conversation.get_context()
-            conv_tokens = self.usage_control.count_tokens(conv_history)
-            
-            # Calculate remaining tokens for PDF context
-            system_tokens = self.usage_control.count_tokens(self.system_prompt)
-            query_tokens = self.usage_control.count_tokens(query)
-            available_tokens = self.max_context_tokens - system_tokens - query_tokens - conv_tokens
-            
-            # Format context with conversation history
-            context = "Previous conversation:\n" + conv_history + "\n\n"
-            context += "Relevant document sections:\n"
-            
-            # Add chunks while respecting token limit and relevance score
-            current_tokens = self.usage_control.count_tokens(context)
-            added_chunks = 0
-            
-            for result in results:
-                text = result["text"]
-                score = result["score"]
-                metadata = result.get("metadata", {})
-                page = metadata.get("page", "unknown")
-                
-                # Only consider chunks with good relevance
-                if score <= 0.5:
-                    continue
-                
-                # Calculate tokens for this chunk
-                chunk_text = f"\nSection {added_chunks + 1} (Page {page}):\n{text}\n"
-                chunk_tokens = self.usage_control.count_tokens(chunk_text)
-                
-                # Check if adding this chunk would exceed token limit
-                if current_tokens + chunk_tokens > available_tokens:
-                    break
-                
-                context += chunk_text
-                current_tokens += chunk_tokens
-                added_chunks += 1
-                
-                # Stop after adding enough relevant chunks
-                if added_chunks >= 5:
-                    break
+            logger.info(f"Getting context for query: {query[:50]}... from file: {filename}")
 
-            logger.info(f"Context window usage: {current_tokens}/{self.max_context_tokens} tokens")
-            return context
-
+            # Get base collection name
+            base_name = vector_store._sanitize_collection_name(filename)
+            logger.info(f"Base collection name: {base_name}")
+            
+            # List all collections
+            collections = vector_store.client.list_collections()
+            logger.info(f"Available collections: {[c.name for c in collections]}")
+            
+            # Find matching collections
+            matching_collections = [c for c in collections if c.name.startswith(base_name)]
+            logger.info(f"Found matching collections: {[c.name for c in matching_collections]}")
+            
+            if not matching_collections:
+                logger.error(f"No collections found matching {base_name}")
+                return f"[Document '{filename}' not found in the database]"
+            
+            try:
+                # Try to detect query language
+                try:
+                    query_lang = detect(query)
+                    logger.info(f"Detected query language: {query_lang}")
+                except:
+                    query_lang = None
+                    logger.info("Could not detect query language, will search all collections")
+                
+                # Search with language if detected
+                results = await vector_store.similarity_search(
+                    collection_name=filename,
+                    query=query,
+                    k=5,
+                    language=query_lang
+                )
+                
+                if results:
+                    # Join the content of relevant chunks
+                    context = "\n\n".join([r["text"] for r in results])
+                    logger.info(f"Found {len(results)} relevant chunks, total length: {len(context)}")
+                    return context
+                else:
+                    logger.warning(f"No relevant content found in collections")
+                    return f"[No relevant content found in document '{filename}']"
+                    
+            except Exception as e:
+                if "Embedding dimension" in str(e):
+                    # Delete the collection if there's a dimension mismatch
+                    logger.info(f"Deleting collection due to dimension mismatch: {base_name}")
+                    await vector_store.delete_collection(filename)
+                    return f"[Please re-upload the document '{filename}' to update its embeddings]"
+                raise
+                
         except Exception as e:
             logger.error(f"Error getting context: {str(e)}")
-            return ""
+            logger.error(f"Full traceback: {traceback.format_exc()}")
+            return f"[Error accessing document: {str(e)}]"
 
-    async def stream_chat(self, query: str, filename: str | None) -> AsyncGenerator[str, None]:
+    async def stream_chat(self, message: str, filename: str | None) -> AsyncGenerator[str, None]:
+        """Stream chat responses with proper language and context handling."""
         try:
-            conversation = self._get_or_create_conversation(filename)
-            
-            # Get context from vector store if filename is provided
-            context = ""
-            if filename:
-                context = await self.get_relevant_context(query, filename, conversation)
-
-            # Add the user's message to conversation
-            conversation.add_message("user", query)
-
-            # Prepare the messages for the API
-            messages = [
-                {"role": "system", "content": "You are a helpful assistant. " +
-                 "If context is provided, use it to answer questions accurately."}
-            ]
-
-            if context:
-                messages.append({"role": "system", "content": f"Context from the document:\n{context}"})
-
-            # Add conversation history
-            for msg in conversation.messages[:-1]:  # Exclude the last message as we'll add it separately
-                messages.append({"role": msg.role, "content": msg.content})
-
-            # Add the current query with language instruction
-            messages.append({"role": "user", "content": f"[Respond in {conversation.current_language}]\n{query}"})
-
-            # Check rate limit
+            # Check rate limits first
             if not self.usage_control.check_rate_limit():
-                yield "Rate limit exceeded. Please wait a minute and try again."
+                yield "Rate limit exceeded. Please wait before making more requests."
                 return
 
-            # Handle general questions when no PDF is uploaded
-            if not filename:
-                async for chunk in self.get_general_response(query):
-                    yield chunk
-                return
+            # Get or create conversation for this file
+            self.conversation = self._get_or_create_conversation(filename)
 
-            # Get context from the PDF
-            context = await self.get_relevant_context(query, filename, conversation)
+            # Get relevant context first - await the coroutine
+            context = await self.get_relevant_context(message, filename)
             
-            if not context:
-                yield "I couldn't find any relevant information in the document. Please try rephrasing your question or ask about a different topic."
-                return
-
+            # Add user message and update conversation language
+            self.conversation.add_message("user", message)
+            
             # Prepare messages for OpenAI
-            messages = [
-                {"role": "system", "content": self.system_prompt},
-                {"role": "user", "content": f"Context from the PDF:\n\n{context}\n\nQuestion: {query}"}
-            ]
+            messages = []
             
-            # Count input tokens
-            input_tokens = sum(self.usage_control.count_tokens(msg["content"]) for msg in messages)
+            # Add system prompt in conversation language
+            messages.append({"role": "system", "content": self.system_prompt})
             
-            # Estimate output tokens (rough estimate)
-            estimated_output_tokens = 500
-            
-            # Calculate estimated cost
-            estimated_cost = self.usage_control.calculate_cost(input_tokens, estimated_output_tokens)
-            
-            # Check cost limit
-            if not self.usage_control.check_cost_limit(estimated_cost):
-                yield "Daily cost limit reached. Please try again tomorrow."
+            # Add context if available
+            if context and not context.startswith("["):  # Only add if it's not an error message
+                messages.append({
+                    "role": "system", 
+                    "content": f"Here is relevant information from the document:\n\n{context}"
+                })
+            elif context.startswith("["):  # If it's an error message, yield it and return
+                yield context
                 return
+            
+            # Add conversation history
+            messages.extend([
+                {"role": msg.role, "content": msg.content} 
+                for msg in self.conversation.messages[-5:]  # Last 5 messages
+            ])
 
-            try:
-                # Stream the response from OpenAI
-                stream = await self.client.chat.completions.create(
-                    model="gpt-3.5-turbo",
-                    messages=messages,
-                    max_tokens=self.usage_control.max_tokens_per_request,
-                    temperature=0.7,
-                    stream=True
-                )
+            # Stream response from OpenAI
+            stream = await self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=messages,
+                stream=True,
+                temperature=0.7,
+            )
+            
+            async for chunk in stream:
+                if chunk.choices[0].delta.content:
+                    yield chunk.choices[0].delta.content
 
-                response_text = ""
-                completion_tokens = 0
-                async for chunk in stream:
-                    if chunk.choices[0].delta.content:
-                        text = chunk.choices[0].delta.content
-                        response_text += text
-                        completion_tokens += self.usage_control.count_tokens(text)
-                        yield text
-
-                # Log token usage
-                self.usage_control.log_usage(
-                    prompt_tokens=input_tokens,
-                    completion_tokens=completion_tokens
-                )
-
-                # Add messages to conversation history
-                conversation.add_message("user", query)
-                conversation.add_message("assistant", response_text)
-
-            except Exception as e:
-                logger.error(f"Error generating response: {str(e)}")
-                yield "I encountered an error while processing your question. Please try asking in a different way."
-                
+            # Update usage after successful completion
+            self.usage_control.log_usage()
+            
         except Exception as e:
-            logger.error(f"Error in stream_chat: {str(e)}")
-            yield "Sorry, I encountered an error. Please try again."
+            error_msg = f"An error occurred: {str(e)}"
+            yield error_msg
+            logger.error(f"Error in stream_chat: {error_msg}")
 
     def _get_or_create_conversation(self, filename: str | None) -> Conversation:
         """Get or create a conversation for a file."""

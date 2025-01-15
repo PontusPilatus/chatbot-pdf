@@ -8,9 +8,15 @@ interface FileUploadProps {
   onFileProcessed: (filename: string) => void;
   onSummaryReceived: (summary: string) => void;
   onUploadComplete: () => void;
+  onChatFileSelect: (filename: string) => void;
 }
 
-export default function FileUpload({ onFileProcessed, onSummaryReceived, onUploadComplete }: FileUploadProps) {
+export default function FileUpload({
+  onFileProcessed,
+  onSummaryReceived,
+  onUploadComplete,
+  onChatFileSelect
+}: FileUploadProps) {
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -46,6 +52,9 @@ export default function FileUpload({ onFileProcessed, onSummaryReceived, onUploa
         onSummaryReceived(data.summary);
       }
 
+      // Automatically select the uploaded file
+      onChatFileSelect(file.name);
+
       // Notify parent that upload is complete
       onUploadComplete();
 
@@ -54,7 +63,7 @@ export default function FileUpload({ onFileProcessed, onSummaryReceived, onUploa
     } finally {
       setUploading(false);
     }
-  }, [onFileProcessed, onSummaryReceived, onUploadComplete]);
+  }, [onFileProcessed, onSummaryReceived, onUploadComplete, onChatFileSelect]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,

@@ -65,14 +65,22 @@ async def upload_pdf(file: UploadFile):
             
             logger.info(f"PDF processed: {file.filename} ({len(chunks)} chunks)")
 
-            # Store chunks in vector store
+            # Store chunks in vector store with language metadata
             try:
+                chunk_metadata = result.get("chunk_metadata", [])
+                if not chunk_metadata:
+                    chunk_metadata = [{
+                        "page": i,
+                        "language": result["metadata"].get("language", "en"),
+                        "filename": file.filename
+                    } for i in range(len(chunks))]
+
                 await vector_store.add_texts(
                     collection_name=file.filename,
                     texts=chunks,
-                    metadata=[{"page": i} for i in range(len(chunks))]
+                    metadata=chunk_metadata
                 )
-                logger.info(f"Chunks stored for {file.filename}")
+                logger.info(f"Chunks stored for {file.filename} in language: {result['metadata'].get('language', 'en')}")
             except Exception as e:
                 logger.error(f"Failed to store chunks for {file.filename}: {str(e)}")
                 raise HTTPException(

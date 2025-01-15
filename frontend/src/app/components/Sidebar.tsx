@@ -147,6 +147,7 @@ export default function Sidebar({
                 onFileProcessed={onFileProcessed}
                 onSummaryReceived={onSummaryReceived}
                 onUploadComplete={refreshFiles}
+                onChatFileSelect={onChatFileSelect}
               />
             </div>
             <FileList

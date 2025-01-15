@@ -47,28 +47,22 @@ export default function Home() {
       {
         id: uuidv4(),
         role: 'assistant',
-        content: '👋 Hi there! I\'m PDF Pal, your friendly document companion. I can help you understand and interact with your PDF documents through natural conversation!',
+        content: '👋 Welcome! I\'m your PDF companion, ready to help you explore and understand your documents.',
         timestamp: new Date().toISOString(),
         isStreaming: false
       },
       {
         id: uuidv4(),
         role: 'assistant',
-        content: `Here's how to get started:
-
-1️⃣ Upload a PDF using the sidebar
-2️⃣ Ask questions about its content
-3️⃣ Get instant, context-aware responses
-
-💡 Pro tip: Feel free to chat in any language - English, Swedish, Spanish, German, Chinese, Arabic, or any other language! I'll automatically detect and respond in your preferred language.`,
-        timestamp: new Date(Date.now() + 1500).toISOString(),
+        content: 'You can upload any PDF and I\'ll help you:\n\n• Extract key information\n• Answer specific questions\n• Provide summaries and insights\n• Navigate complex documents',
+        timestamp: new Date(Date.now() + 300).toISOString(),
         isStreaming: false
       },
       {
         id: uuidv4(),
         role: 'assistant',
-        content: 'Ready to begin? Upload a PDF or ask me about my features! 🚀',
-        timestamp: new Date(Date.now() + 3000).toISOString(),
+        content: 'To get started, just upload a PDF using the sidebar. I\'ll process it and we can begin our conversation! 📚',
+        timestamp: new Date(Date.now() + 600).toISOString(),
         isStreaming: false
       }
     ]
@@ -88,9 +82,9 @@ export default function Home() {
           isStreaming: true
         }])
 
-        // Wait for a moment to simulate typing
+        // Brief delay to show typing indicator
         await new Promise(resolve => {
-          timeoutIds.push(setTimeout(resolve, 1500))
+          timeoutIds.push(setTimeout(resolve, 200))
         })
 
         // Update with full content
@@ -100,10 +94,10 @@ export default function Home() {
             : msg
         ))
 
-        // Wait before showing next message
+        // Very brief delay before next message
         if (i < welcomeMessages.length - 1) {
           await new Promise(resolve => {
-            timeoutIds.push(setTimeout(resolve, 500))
+            timeoutIds.push(setTimeout(resolve, 100))
           })
         }
       }
