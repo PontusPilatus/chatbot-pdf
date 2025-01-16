@@ -106,63 +106,61 @@ export default function FileList({
   }
 
   return (
-    <div className="h-[calc(100vh-240px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-      <div className="p-2">
-        {files.map((file) => (
-          <div
-            key={file.filename}
-            onClick={() => onChatFileSelect(file.filename)}
-            className={`flex items-start p-3 rounded-lg group cursor-pointer mb-2
-              ${activeFile === file.filename
-                ? 'bg-blue-50 dark:bg-blue-900/20'
-                : chatFile === file.filename
-                  ? 'bg-gray-100 dark:bg-gray-700'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-          >
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                  {file.filename}
-                </p>
-                <div className="flex items-center space-x-1 min-w-[68px]">
-                  <button
-                    onClick={(e) => handlePreview(file.filename, e)}
-                    className={`p-1 rounded-lg hidden group-hover:block
-                      hover:bg-blue-50 dark:hover:bg-blue-900/20
-                      text-blue-500 dark:text-blue-400
-                      ${activeFile === file.filename ? '!block' : ''}`}
-                    title={activeFile === file.filename ? 'Currently previewing' : 'Preview file'}
-                  >
-                    <FiEye className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={(e) => handleDelete(file.filename, e)}
-                    className="p-1 rounded-lg hidden group-hover:block
-                      hover:bg-red-50 dark:hover:bg-red-900/20
-                      text-red-500 dark:text-red-400"
-                    title="Delete file"
-                  >
-                    <FiTrash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-              <div className="flex items-center mt-1 text-xs text-gray-500 dark:text-gray-400 space-x-2">
-                <span>{formatFileSize(file.size)}</span>
-                <span>•</span>
-                <FiClock className="w-3 h-3" />
-                <span>{formatDate(file.last_modified)}</span>
+    <div className="p-2">
+      {files.map((file) => (
+        <div
+          key={file.filename}
+          onClick={() => onChatFileSelect(file.filename)}
+          className={`flex items-start p-3 rounded-lg group cursor-pointer mb-2
+            ${activeFile === file.filename
+              ? 'bg-blue-50 dark:bg-blue-900/20'
+              : chatFile === file.filename
+                ? 'bg-gray-100 dark:bg-gray-700'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+        >
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                {file.filename}
+              </p>
+              <div className="flex items-center space-x-1 min-w-[68px]">
+                <button
+                  onClick={(e) => handlePreview(file.filename, e)}
+                  className={`p-1 rounded-lg hidden group-hover:block
+                    hover:bg-blue-50 dark:hover:bg-blue-900/20
+                    text-blue-500 dark:text-blue-400
+                    ${activeFile === file.filename ? '!block' : ''}`}
+                  title={activeFile === file.filename ? 'Currently previewing' : 'Preview file'}
+                >
+                  <FiEye className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={(e) => handleDelete(file.filename, e)}
+                  className="p-1 rounded-lg hidden group-hover:block
+                    hover:bg-red-50 dark:hover:bg-red-900/20
+                    text-red-500 dark:text-red-400"
+                  title="Delete file"
+                >
+                  <FiTrash2 className="w-4 h-4" />
+                </button>
               </div>
             </div>
+            <div className="flex items-center mt-1 text-xs text-gray-500 dark:text-gray-400 space-x-2">
+              <span>{formatFileSize(file.size)}</span>
+              <span>•</span>
+              <FiClock className="w-3 h-3" />
+              <span>{formatDate(file.last_modified)}</span>
+            </div>
           </div>
-        ))}
+        </div>
+      ))}
 
-        <DeleteFileModal
-          isOpen={selectedFile !== null}
-          fileName={selectedFile?.name || ''}
-          onConfirm={handleConfirmDelete}
-          onCancel={handleCancelDelete}
-        />
-      </div>
+      <DeleteFileModal
+        isOpen={selectedFile !== null}
+        fileName={selectedFile?.name || ''}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
     </div>
   )
 } 

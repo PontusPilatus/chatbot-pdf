@@ -1,6 +1,6 @@
-# PDF Pal
+# EVA
 
-An AI-powered companion that can answer questions about PDF documents. Built with Next.js, TypeScript, Python, and FastAPI.
+EVA (Efficient Virtual Assistant) is an AI-powered companion that can answer questions about PDF documents. Built with Next.js, TypeScript, Python, and FastAPI.
 
 ## Current Features
 

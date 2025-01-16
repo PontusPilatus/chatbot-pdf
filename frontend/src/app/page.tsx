@@ -47,7 +47,7 @@ export default function Home() {
       {
         id: uuidv4(),
         role: 'assistant',
-        content: '👋 Welcome! I\'m your PDF companion, ready to help you explore and understand your documents.',
+        content: '👋 Welcome! I\'m EVA (Efficient Virtual Assistant), your intelligent document companion.',
         timestamp: new Date().toISOString(),
         isStreaming: false
       },
@@ -409,7 +409,7 @@ export default function Home() {
                   <button
                     onClick={() => {
                       const content = convertToMarkdown(messages, activePDF)
-                      const filename = `pdf-pal-chat-${new Date().toISOString().split('T')[0]}.md`
+                      const filename = `eva-chat-${new Date().toISOString().split('T')[0]}.md`
                       downloadMarkdown(content, filename)
                     }}
                     className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
