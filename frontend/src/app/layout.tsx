@@ -6,7 +6,7 @@ import ClientLayout from './ClientLayout'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'PDF Pal',
+  title: 'EVA',
   description: 'Chat with your PDF documents using AI',
 }
 

@@ -1,39 +1,24 @@
 import { ChatMessage } from '@/types/chat'
 
 export function convertToMarkdown(messages: ChatMessage[], activePDF: string | null): string {
-  const timestamp = new Date().toLocaleString()
-  const header = [
-    '# PDF Pal Chat Export',
+  const lines = [
+    '# EVA Chat Export',
     '',
-    `**Date:** ${timestamp}`,
-    activePDF ? `**Document:** ${activePDF}` : '**Document:** No document loaded',
+    `Generated on: ${new Date().toLocaleString()}`,
     '',
-    '---',
-    ''
-  ].join('\n')
+  ]
 
-  const content = messages.map(message => {
-    const role = message.role === 'user' ? '👤 **You**' : '🤖 **PDF Pal**'
-    const time = new Date(message.timestamp).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit'
-    })
+  if (activePDF) {
+    lines.push(`Active PDF: ${activePDF}`, '')
+  }
 
-    return [
-      `### ${role} (${time})`,
-      '',
-      message.content.split('\n').map(line => {
-        // Handle bullet points
-        if (line.startsWith('•')) return `* ${line.slice(1).trim()}`
-        // Handle numbered lists
-        if (line.match(/^\d+[\.\)]/) || line.match(/^[①-⑳]/)) return `1. ${line.replace(/^[①-⑳]|\d+[\.\)]/, '').trim()}`
-        return line
-      }).join('\n'),
-      ''
-    ].join('\n')
-  }).join('\n')
+  messages.forEach(message => {
+    const timestamp = new Date(message.timestamp).toLocaleString()
+    const role = message.role === 'user' ? '👤 **You**' : '🤖 **EVA**'
+    lines.push(`### ${role} - ${timestamp}`, '', message.content, '')
+  })
 
-  return header + content
+  return lines.join('\n')
 }
 
 export function downloadMarkdown(content: string, filename: string) {

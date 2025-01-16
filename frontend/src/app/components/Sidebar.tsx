@@ -6,7 +6,7 @@ import FileList from './FileList'
 import { useTheme } from '../contexts/ThemeContext'
 import { useFileList } from '../hooks/useFileList'
 import { FiUser, FiUpload, FiList, FiSettings, FiInfo, FiSun, FiMoon, FiClock, FiTrash2, FiGlobe, FiChevronDown, FiX } from 'react-icons/fi'
-import { RiRobotFill, RiOpenaiFill, RiRobot2Fill, RiRobotLine, RiAliensFill, RiSpaceShipFill, RiUserSmileLine, RiUserHeartLine, RiUserStarLine, RiUserSettingsLine, RiUserSearchLine, RiUserLocationLine, RiUserFollowLine, RiUserSharedLine, RiUserVoiceLine, RiEarthLine, RiAiGenerate } from 'react-icons/ri'
+import { RiRobotFill, RiOpenaiFill, RiRobot2Fill, RiRobotLine, RiAliensFill, RiSpaceShipFill, RiUserSmileLine, RiUserHeartLine, RiUserStarLine, RiUserSettingsLine, RiUserSearchLine, RiUserLocationLine, RiUserFollowLine, RiUserSharedLine, RiUserVoiceLine, RiEarthLine, RiAiGenerate, RiBrainLine } from 'react-icons/ri'
 import { HiSparkles } from 'react-icons/hi'
 import { BiBrain, BiUserCircle, BiUserPin, BiUserCheck } from 'react-icons/bi'
 import { TbBrain, TbRobot } from 'react-icons/tb'
@@ -133,20 +133,46 @@ export default function Sidebar({
   return (
     <div className={`flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 w-[320px] ${className}`}>
       {/* Sidebar Header */}
-      <div className="h-16 flex flex-col justify-center px-4">
-        <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-200">EVA</h1>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          <span className="text-blue-500 dark:text-blue-400">E</span>fficient
-          <span className="text-blue-500 dark:text-blue-400"> V</span>irtual
-          <span className="text-blue-500 dark:text-blue-400"> A</span>ssistant
-        </p>
+      <div className="h-16 flex items-center px-4">
+        <div className="flex items-center">
+          <RiBrainLine className="w-8 h-8 text-blue-500 dark:text-blue-400 animate-pulse mr-3" />
+          <div>
+            <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-200">EVA</h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-blue-500 dark:text-blue-400 inline-block hover:scale-110 transition-transform duration-200">E</span>fficient
+              <span className="text-blue-500 dark:text-blue-400 inline-block hover:scale-110 transition-transform duration-200">V</span>irtual
+              <span className="text-blue-500 dark:text-blue-400 inline-block hover:scale-110 transition-transform duration-200">A</span>ssistant
+            </p>
+          </div>
+        </div>
       </div>
 
+      {/* Welcome Screen (shown when no files are uploaded) */}
+      {activeTab === 'files' && files.length === 0 && (
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+          <div className="relative w-24 h-24 mb-6">
+            <div className="absolute inset-0 bg-blue-500/10 dark:bg-blue-400/10 rounded-full animate-ping" />
+            <div className="relative flex items-center justify-center w-full h-full bg-blue-500/20 dark:bg-blue-400/20 rounded-full">
+              <RiBrainLine className="w-12 h-12 text-blue-500 dark:text-blue-400" />
+            </div>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            Welcome to EVA
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-8 max-w-xs">
+            Your intelligent document companion. Upload a PDF to start exploring its contents through natural conversation.
+          </p>
+          <div className="animate-bounce">
+            <FiUpload className="w-6 h-6 text-blue-500 dark:text-blue-400" />
+          </div>
+        </div>
+      )}
+
       {/* Main Content Area */}
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col flex-1 min-h-0">
         {/* Files Section */}
         {activeTab === 'files' && (
-          <div className="flex-1">
+          <div className="flex flex-col flex-1 min-h-0">
             <div className="p-4">
               <FileUpload
                 onFileProcessed={onFileProcessed}
@@ -155,7 +181,7 @@ export default function Sidebar({
                 onChatFileSelect={onChatFileSelect}
               />
             </div>
-            <div className="h-[calc(100vh-240px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
+            <div className="flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
               <FileList
                 onFileSelect={onFileSelect}
                 activeFile={activePDF}
@@ -173,7 +199,7 @@ export default function Sidebar({
 
         {/* Settings Section */}
         {activeTab === 'settings' && (
-          <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
+          <div className="flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
             <div className="p-4 space-y-6">
               {/* Header with Close Button */}
               <div className="flex justify-between items-center">
@@ -444,7 +470,7 @@ export default function Sidebar({
 
         {/* About Section */}
         {activeTab === 'about' && (
-          <div className="flex-1">
+          <div className="flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
             <div className="h-[calc(100vh-240px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
               <div className="p-4 space-y-4">
                 {/* Header with Close Button */}
@@ -534,7 +560,7 @@ export default function Sidebar({
         )}
 
         {/* Bottom Navigation */}
-        <div className="mt-auto p-2 space-y-2">
+        <div className="flex-shrink-0 p-2 space-y-2 border-t border-gray-200 dark:border-gray-700">
           <button
             onClick={() => setActiveTab(activeTab === 'settings' ? 'files' : 'settings')}
             className={`w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium
