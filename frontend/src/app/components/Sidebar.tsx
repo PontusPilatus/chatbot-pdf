@@ -162,9 +162,15 @@ export default function Sidebar({
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-8 max-w-xs">
             Your intelligent document companion. Upload a PDF to start exploring its contents through natural conversation.
           </p>
-          <div className="animate-bounce">
-            <FiUpload className="w-6 h-6 text-blue-500 dark:text-blue-400" />
-          </div>
+          <button
+            onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}
+            className="p-3 rounded-full"
+            title="Upload PDF"
+          >
+            <div className="animate-bounce">
+              <FiUpload className="w-6 h-6 text-blue-500 dark:text-blue-400" />
+            </div>
+          </button>
         </div>
       )}
 

@@ -47,21 +47,21 @@ export default function Home() {
       {
         id: uuidv4(),
         role: 'assistant',
-        content: '👋 Welcome! I\'m EVA (Efficient Virtual Assistant), your intelligent document companion.',
+        content: '✨ Hi there! I\'m EVA, your personal document companion. I\'m here to make exploring PDFs a breeze!',
         timestamp: new Date().toISOString(),
         isStreaming: false
       },
       {
         id: uuidv4(),
         role: 'assistant',
-        content: 'You can upload any PDF and I\'ll help you:\n\n• Extract key information\n• Answer specific questions\n• Provide summaries and insights\n• Navigate complex documents',
+        content: 'Let me help you unlock the knowledge in your PDFs. I can:\n\n• Find exactly what you\'re looking for\n• Answer your questions in detail\n• Create custom summaries\n• Help you understand complex content',
         timestamp: new Date(Date.now() + 300).toISOString(),
         isStreaming: false
       },
       {
         id: uuidv4(),
         role: 'assistant',
-        content: 'To get started, just upload a PDF using the sidebar. I\'ll process it and we can begin our conversation! 📚',
+        content: 'Ready to dive in? Just upload your PDF using the sidebar and we\'ll explore it together! 🚀',
         timestamp: new Date(Date.now() + 600).toISOString(),
         isStreaming: false
       }
