@@ -477,88 +477,86 @@ export default function Sidebar({
         {/* About Section */}
         {activeTab === 'about' && (
           <div className="flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
-            <div className="h-[calc(100vh-240px)] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
-              <div className="p-4 space-y-4">
-                {/* Header with Close Button */}
-                <div className="flex justify-between items-center">
-                  <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">About EVA</h2>
-                  <button
-                    onClick={() => setActiveTab('files')}
-                    className="p-1 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-                  >
-                    <FiX className="w-5 h-5" />
-                  </button>
+            <div className="p-4 space-y-4">
+              {/* Header with Close Button */}
+              <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">About EVA</h2>
+                <button
+                  onClick={() => setActiveTab('files')}
+                  className="p-1 rounded-lg text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  <FiX className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="prose dark:prose-invert">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  EVA (Efficient Virtual Assistant) is an intelligent companion designed to help you interact with and understand PDF documents through natural conversation. Supports both text-based PDFs and scanned documents through advanced OCR technology.
+                </p>
+
+                <div className="mt-6">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Key Features</h3>
+                  <ul className="mt-2 space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Smart PDF processing with automatic text extraction and OCR support</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Multi-language support with 26+ languages including English, Swedish, German, French, and more</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Automatic language detection and OCR optimization</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Context-aware responses using advanced AI technology</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Real-time streaming responses for faster interactions</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Efficient file management with upload tracking</span>
+                    </li>
+                  </ul>
                 </div>
 
-                <div className="prose dark:prose-invert">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    EVA (Efficient Virtual Assistant) is an intelligent companion designed to help you interact with and understand PDF documents through natural conversation. Supports both text-based PDFs and scanned documents through advanced OCR technology.
-                  </p>
+                <div className="mt-6">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Technologies</h3>
+                  <ul className="mt-2 space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Next.js & TypeScript for the frontend</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Python & FastAPI for the backend</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Tesseract OCR for text extraction from images</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>Poppler for PDF to image conversion</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>OpenAI's GPT for intelligent responses</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2">•</span>
+                      <span>ChromaDB for efficient document storage</span>
+                    </li>
+                  </ul>
+                </div>
 
-                  <div className="mt-6">
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Key Features</h3>
-                    <ul className="mt-2 space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Smart PDF processing with automatic text extraction and OCR support</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Multi-language support with 26+ languages including English, Swedish, German, French, and more</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Automatic language detection and OCR optimization</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Context-aware responses using advanced AI technology</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Real-time streaming responses for faster interactions</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Efficient file management with upload tracking</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="mt-6">
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Technologies</h3>
-                    <ul className="mt-2 space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Next.js & TypeScript for the frontend</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Python & FastAPI for the backend</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Tesseract OCR for text extraction from images</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>Poppler for PDF to image conversion</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>OpenAI's GPT for intelligent responses</span>
-                      </li>
-                      <li className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>ChromaDB for efficient document storage</span>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="mt-6">
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Version</h3>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">1.1.0</p>
-                  </div>
+                <div className="mt-6">
+                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Version</h3>
+                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">1.1.0</p>
                 </div>
               </div>
             </div>

@@ -441,7 +441,7 @@ export default function Home() {
             </div>
 
             {/* Input Area */}
-            <form onSubmit={handleSubmit} className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-700">
+            <form onSubmit={handleSubmit} className="flex-shrink-0 p-4">
               <div className={`${!activePDF ? 'max-w-2xl mx-auto' : ''}`}>
                 <div className="flex space-x-4">
                   <input
