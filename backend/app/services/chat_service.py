@@ -166,7 +166,7 @@ class ChatService:
         
         Remember: Stay in the user's chosen language throughout the entire conversation."""
 
-    async def get_relevant_context(self, query: str, filename: str | None = None) -> str:
+    async def get_relevant_context(self, query: str, filename: str | None = None, query_language: str | None = None) -> str:
         """Get relevant context for the query from vector store."""
         try:
             if not filename:
@@ -174,37 +174,43 @@ class ChatService:
 
             logger.info(f"Getting context for query: {query[:50]}... from file: {filename}")
 
+            # Always translate non-English queries to English for search
+            original_language = query_language or detect(query)
+            if original_language != 'en':
+                # Translate query to English for search
+                translation_messages = [
+                    {"role": "system", "content": "Translate the following text to English, keeping the same meaning and intent:"},
+                    {"role": "user", "content": query}
+                ]
+                
+                translation_response = await self.client.chat.completions.create(
+                    model="gpt-3.5-turbo",
+                    messages=translation_messages,
+                    temperature=0.3,
+                )
+                
+                english_query = translation_response.choices[0].message.content.strip()
+                logger.info(f"Translated query from {original_language} to English: {english_query}")
+                query = english_query
+
             # Get base collection name
             base_name = vector_store._sanitize_collection_name(filename)
-            logger.info(f"Base collection name: {base_name}")
             
             # List all collections
             collections = vector_store.client.list_collections()
-            logger.info(f"Available collections: {[c.name for c in collections]}")
             
             # Find matching collections
             matching_collections = [c for c in collections if c.name.startswith(base_name)]
-            logger.info(f"Found matching collections: {[c.name for c in matching_collections]}")
             
             if not matching_collections:
-                logger.error(f"No collections found matching {base_name}")
-                return f"[Document '{filename}' not found in the database]"
+                return f"[DOCUMENT_NOT_FOUND]"
             
             try:
-                # Try to detect query language
-                try:
-                    query_lang = detect(query)
-                    logger.info(f"Detected query language: {query_lang}")
-                except:
-                    query_lang = None
-                    logger.info("Could not detect query language, will search all collections")
-                
-                # Search with language if detected
+                # Search with English query
                 results = await vector_store.similarity_search(
                     collection_name=filename,
                     query=query,
-                    k=5,
-                    language=query_lang
+                    k=5
                 )
                 
                 if results:
@@ -214,22 +220,25 @@ class ChatService:
                     return context
                 else:
                     logger.warning(f"No relevant content found in collections")
-                    return f"[No relevant content found in document '{filename}']"
+                    return f"[NO_RELEVANT_CONTENT]"
                     
             except Exception as e:
                 if "Embedding dimension" in str(e):
-                    # Delete the collection if there's a dimension mismatch
-                    logger.info(f"Deleting collection due to dimension mismatch: {base_name}")
-                    await vector_store.delete_collection(filename)
-                    return f"[Please re-upload the document '{filename}' to update its embeddings]"
+                    return f"[REUPLOAD_REQUIRED]"
                 raise
                 
         except Exception as e:
             logger.error(f"Error getting context: {str(e)}")
             logger.error(f"Full traceback: {traceback.format_exc()}")
-            return f"[Error accessing document: {str(e)}]"
+            return f"[ERROR]"
 
-    async def stream_chat(self, message: str, filename: str | None) -> AsyncGenerator[str, None]:
+    async def stream_chat(
+        self, 
+        message: str, 
+        filename: str | None,
+        language: str | None = None,
+        context: dict | None = None
+    ) -> AsyncGenerator[str, None]:
         """Stream chat responses with proper language and context handling."""
         try:
             # Check rate limits first
@@ -239,9 +248,14 @@ class ChatService:
 
             # Get or create conversation for this file
             self.conversation = self._get_or_create_conversation(filename)
+            
+            # Set language if provided
+            if language:
+                self.conversation.current_language = language
+                self.conversation.language_locked = True
 
             # Get relevant context first - await the coroutine
-            context = await self.get_relevant_context(message, filename)
+            context_text = await self.get_relevant_context(message, filename, language)
             
             # Add user message and update conversation language
             self.conversation.add_message("user", message)
@@ -249,19 +263,42 @@ class ChatService:
             # Prepare messages for OpenAI
             messages = []
             
-            # Add system prompt in conversation language
-            messages.append({"role": "system", "content": self.system_prompt})
+            # Add system prompt with stronger language instruction
+            system_prompt = """You are a helpful and friendly multilingual PDF assistant. For this conversation:
+            1. You MUST ALWAYS respond in the user's language
+            2. Keep responses natural, concise, and to the point
+            3. Answer exactly what was asked, don't add unnecessary details
+            4. Use a conversational tone, as if chatting with a friend
+            5. If translating content, focus on the key information rather than word-for-word translation
+            6. Avoid technical jargon unless specifically asked about technical details
+            """
             
-            # Add context if available
-            if context and not context.startswith("["):  # Only add if it's not an error message
+            if language:
+                system_prompt += f"\nIMPORTANT: The current conversation language is {language}. Respond naturally in {language} as if it's your native language."
+                if language == 'sv':
+                    system_prompt += " Use a friendly, modern Swedish tone - not too formal."
+                    
+            messages.append({"role": "system", "content": system_prompt})
+            
+            # Handle context based on status
+            if context_text == "[DOCUMENT_NOT_FOUND]":
+                error_msg = "Document not found" if language != 'sv' else "Dokumentet kunde inte hittas"
+                messages.append({"role": "system", "content": f"Error: {error_msg}"})
+            elif context_text == "[NO_RELEVANT_CONTENT]":
+                # Instead of returning error, let the model handle the response
+                messages.append({"role": "system", "content": "Note: No specific content found for this query. Please provide a general response."})
+            elif context_text == "[REUPLOAD_REQUIRED]":
+                error_msg = "Please re-upload the document" if language != 'sv' else "Vänligen ladda upp dokumentet igen"
+                messages.append({"role": "system", "content": f"Error: {error_msg}"})
+            elif context_text == "[ERROR]":
+                error_msg = "Error accessing document" if language != 'sv' else "Kunde inte komma åt dokumentet"
+                messages.append({"role": "system", "content": f"Error: {error_msg}"})
+            elif context_text:
                 messages.append({
                     "role": "system", 
-                    "content": f"Here is relevant information from the document:\n\n{context}"
+                    "content": f"Here is relevant information from the document (translate if needed):\n\n{context_text}"
                 })
-            elif context.startswith("["):  # If it's an error message, yield it and return
-                yield context
-                return
-            
+
             # Add conversation history
             messages.extend([
                 {"role": msg.role, "content": msg.content} 

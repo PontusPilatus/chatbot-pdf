@@ -66,7 +66,7 @@ export default function ChatMessage({ message, showTimestamp = true, selectedAva
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`flex items-end space-x-2 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
+      <div className={`flex items-end space-x-2 ${isUser ? 'flex-row-reverse space-x-reverse max-w-[80%]' : ''}`}>
         {/* Avatar */}
         <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors duration-200
           ${isUser
@@ -80,14 +80,14 @@ export default function ChatMessage({ message, showTimestamp = true, selectedAva
         </div>
 
         {/* Message Content */}
-        <div className={`flex flex-col space-y-1 ${isUser ? 'items-end' : 'items-start'}`}>
+        <div className={`flex flex-col space-y-1 ${isUser ? 'items-end w-full' : 'items-start'}`}>
           {/* Message Bubble */}
           <div
             style={{ fontSize: 'var(--chat-font-size)' }}
-            className={`px-4 py-3 rounded-2xl break-words transition-colors duration-200 min-w-[60px]
+            className={`px-4 py-3 rounded-2xl break-words transition-colors duration-200 min-w-[60px] whitespace-pre-wrap w-full
               ${isUser
                 ? 'bg-blue-500 dark:bg-blue-600 text-white rounded-br-none'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none'}`}
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-bl-none max-w-[85%]'}`}
           >
             {message.isStreaming ? (
               <div className="flex space-x-1">
@@ -97,7 +97,7 @@ export default function ChatMessage({ message, showTimestamp = true, selectedAva
               </div>
             ) : (
               (message.content || '').split('\n').map((line, i) => (
-                <p key={i} className={line.startsWith('•') ? 'ml-4' : ''}>
+                <p key={i} className={`${line.startsWith('•') ? 'ml-4' : ''} break-words`}>
                   {line}
                 </p>
               ))

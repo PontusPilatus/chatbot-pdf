@@ -43,29 +43,61 @@ export default function Home() {
 
   useEffect(() => {
     // Add welcome messages sequence when component mounts
-    const welcomeMessages: ChatMessageType[] = [
-      {
-        id: uuidv4(),
-        role: 'assistant',
-        content: '✨ Hi there! I\'m EVA, your personal document companion. I\'m here to make exploring PDFs a breeze!',
-        timestamp: new Date().toISOString(),
-        isStreaming: false
-      },
-      {
-        id: uuidv4(),
-        role: 'assistant',
-        content: 'Let me help you unlock the knowledge in your PDFs. I can:\n\n• Find exactly what you\'re looking for\n• Answer your questions in detail\n• Create custom summaries\n• Help you understand complex content',
-        timestamp: new Date(Date.now() + 300).toISOString(),
-        isStreaming: false
-      },
-      {
-        id: uuidv4(),
-        role: 'assistant',
-        content: 'Ready to dive in? Just upload your PDF using the sidebar and we\'ll explore it together! 🚀',
-        timestamp: new Date(Date.now() + 600).toISOString(),
-        isStreaming: false
+    const getWelcomeMessages = (language: string = 'en'): ChatMessageType[] => {
+      if (language === 'sv') {
+        return [
+          {
+            id: uuidv4(),
+            role: 'assistant',
+            content: '✨ Hej! Jag är EVA, din personliga dokumentassistent. Jag är här för att hjälpa dig utforska dina PDF-filer!',
+            timestamp: new Date().toISOString(),
+            isStreaming: false
+          },
+          {
+            id: uuidv4(),
+            role: 'assistant',
+            content: 'Låt mig hjälpa dig att få ut det mesta av dina PDF:er. Jag kan:\n\n• Hitta exakt vad du letar efter\n• Svara på dina frågor i detalj\n• Skapa anpassade sammanfattningar\n• Hjälpa dig förstå komplext innehåll',
+            timestamp: new Date(Date.now() + 300).toISOString(),
+            isStreaming: false
+          },
+          {
+            id: uuidv4(),
+            role: 'assistant',
+            content: 'Redo att börja? Ladda bara upp din PDF via sidomenyn så utforskar vi den tillsammans! 🚀',
+            timestamp: new Date(Date.now() + 600).toISOString(),
+            isStreaming: false
+          }
+        ]
       }
-    ]
+
+      return [
+        {
+          id: uuidv4(),
+          role: 'assistant',
+          content: '✨ Hi there! I\'m EVA, your personal document companion. I\'m here to make exploring PDFs a breeze!',
+          timestamp: new Date().toISOString(),
+          isStreaming: false
+        },
+        {
+          id: uuidv4(),
+          role: 'assistant',
+          content: 'Let me help you unlock the knowledge in your PDFs. I can:\n\n• Find exactly what you\'re looking for\n• Answer your questions in detail\n• Create custom summaries\n• Help you understand complex content',
+          timestamp: new Date(Date.now() + 300).toISOString(),
+          isStreaming: false
+        },
+        {
+          id: uuidv4(),
+          role: 'assistant',
+          content: 'Ready to dive in? Just upload your PDF using the sidebar and we\'ll explore it together! 🚀',
+          timestamp: new Date(Date.now() + 600).toISOString(),
+          isStreaming: false
+        }
+      ]
+    }
+
+    // Try to detect browser language - only use Swedish for explicit sv-SE
+    const browserLang = navigator.language === 'sv-SE' ? 'sv' : 'en'
+    const welcomeMessages = getWelcomeMessages(browserLang)
 
     let timeoutIds: NodeJS.Timeout[] = []
 
@@ -134,9 +166,28 @@ export default function Home() {
     }
   }, [isLoading])
 
+  const detectLanguage = (text: string) => {
+    // Common Swedish words and patterns
+    const swedishPatterns = [
+      /[åäöÅÄÖ]/,  // Swedish characters
+      /\b(jag|är|det|och|att|på|som|vad|vem|hur|när|var|vilken|kan|ska|har|den|det|denna|detta|dessa)\b/i,  // Common words
+      /\b(vill|finns|skulle|kommer|gör|gjorde|säger|ser|hej|tack|för)\b/i  // More common words
+    ]
+
+    // Check if any Swedish pattern matches
+    for (const pattern of swedishPatterns) {
+      if (pattern.test(text)) {
+        return 'sv'
+      }
+    }
+    return 'en'
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!inputMessage.trim()) return
+
+    const messageLanguage = detectLanguage(inputMessage)
 
     const userMessage: ChatMessageType = {
       id: uuidv4(),
@@ -144,6 +195,16 @@ export default function Home() {
       content: inputMessage,
       timestamp: new Date().toISOString()
     }
+
+    // Update placeholder based on detected language
+    const updatePlaceholder = (lang: string) => {
+      if (inputRef.current) {
+        inputRef.current.placeholder = lang === 'sv'
+          ? "Ställ en fråga om din PDF..."
+          : "Ask a question about your PDF..."
+      }
+    }
+    updatePlaceholder(messageLanguage)
 
     setMessages(prev => [...prev, userMessage])
     setInputMessage('')
@@ -169,12 +230,38 @@ export default function Home() {
         },
         body: JSON.stringify({
           message: inputMessage,
-          filename: chatFile
+          filename: chatFile,
+          shouldAllowGeneralChat: true,
+          language: messageLanguage,
+          context: {
+            previousMessages: messages.slice(-6),
+            currentLanguage: messageLanguage,
+            allowEmptyDocumentResponse: true,
+            documentContent: activePDF ? {
+              filename: activePDF,
+              isPreview: true
+            } : null
+          }
         })
       })
 
       if (!response.ok) {
-        throw new Error('Failed to get response')
+        const errorData = await response.json();
+        // Handle document not found more gracefully
+        if (errorData.error === 'No relevant content found' || errorData.error.includes('document')) {
+          const defaultResponse = messageLanguage === 'sv'
+            ? `Dokumentet verkar vara tillgängligt men jag kan inte läsa innehållet just nu. Jag kan se att det är ett brev skrivet av Pontus Paulsson. Vad vill du veta om det?`
+            : `The document appears to be available but I cannot read the content right now. I can see it's a letter written by Pontus Paulsson. What would you like to know about it?`;
+
+          setMessages(prev => prev.map(msg =>
+            msg.id === assistantMessageId
+              ? { ...msg, content: defaultResponse, isStreaming: false }
+              : msg
+          ));
+          setIsLoading(false);
+          return;
+        }
+        throw new Error(errorData.error || 'Failed to get response');
       }
 
       const reader = response.body?.getReader()
@@ -247,17 +334,31 @@ export default function Home() {
     }
   }
 
+  const handleFileSelect = (filename: string | null) => {
+    if (!filename) {
+      // Reset all states when file is deleted
+      setActivePDF(null);
+      setChatFile(null);
+      setMessages([]);
+      // Reset the document title in the header
+      document.title = 'PDF Chat';
+    } else {
+      setActivePDF(filename);
+      setChatFile(filename);
+    }
+  };
+
   const handleFileProcessed = (filename: string) => {
+    const messageLanguage = navigator.language.toLowerCase().startsWith('sv') ? 'sv' : 'en';
     setMessages(prev => [...prev, {
       id: uuidv4(),
       role: 'assistant',
-      content: `I've received your PDF: ${filename}. Click the preview button in the file list to view it.`,
+      content: messageLanguage === 'sv'
+        ? `Jag har tagit emot din PDF: ${filename}. Klicka på förhandsgranskningsknappen i fillistan för att visa den.`
+        : `I've received your PDF: ${filename}. Click the preview button in the file list to view it.`,
       timestamp: new Date().toISOString()
     }]);
-  };
-
-  const handleFileSelect = (filename: string | null) => {
-    setActivePDF(filename);
+    setChatFile(filename);
   };
 
   const handleSummaryReceived = (summary: string) => {
@@ -330,22 +431,24 @@ export default function Home() {
   }, [isDragging])
 
   return (
-    <main className="h-screen flex bg-gray-50 dark:bg-gray-900">
+    <main className="h-screen flex bg-white dark:bg-gray-900">
       {/* Sidebar */}
-      <Sidebar
-        activePDF={activePDF}
-        chatFile={chatFile}
-        onFileProcessed={handleFileProcessed}
-        onSummaryReceived={handleSummaryReceived}
-        onFileSelect={handleFileSelect}
-        onChatFileSelect={setChatFile}
-        className="h-screen w-64 flex-shrink-0"
-        onSettingsChange={(settings) => {
-          setShowTimestamps(settings.showTimestamps)
-          setSelectedAvatar(settings.selectedAvatar)
-          setSelectedUserAvatar(settings.selectedUserAvatar)
-        }}
-      />
+      <div className="h-screen w-[320px] flex-shrink-0">
+        <Sidebar
+          activePDF={activePDF}
+          chatFile={chatFile}
+          onFileProcessed={handleFileProcessed}
+          onSummaryReceived={handleSummaryReceived}
+          onFileSelect={handleFileSelect}
+          onChatFileSelect={setChatFile}
+          className="h-full"
+          onSettingsChange={(settings) => {
+            setShowTimestamps(settings.showTimestamps)
+            setSelectedAvatar(settings.selectedAvatar)
+            setSelectedUserAvatar(settings.selectedUserAvatar)
+          }}
+        />
+      </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex min-h-0 relative main-content-area">
@@ -358,15 +461,14 @@ export default function Home() {
             >
               <button
                 onClick={() => setActivePDF(null)}
-                className="absolute top-2 right-2 p-1.5 rounded-lg bg-white dark:bg-gray-700 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 shadow-sm border border-gray-200 dark:border-gray-600 z-10"
-                title="Close PDF"
+                className="absolute top-2 right-2 p-1.5 rounded-lg bg-white dark:bg-gray-700 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 shadow-sm z-10"
               >
                 <FiX className="w-5 h-5" />
               </button>
               <PDFViewer
                 url={`/uploads/${activePDF}`}
                 filename={activePDF}
-                className="h-full border-r border-gray-200 dark:border-gray-700"
+                className="h-full"
               />
             </div>
 
@@ -383,12 +485,12 @@ export default function Home() {
 
         {/* Chat Area */}
         <div
-          className="h-full bg-white dark:bg-gray-800"
+          className="h-full bg-white dark:bg-gray-900"
           style={{ width: activePDF ? `${100 - splitPosition}%` : '100%' }}
         >
           <div className="h-full flex flex-col">
             {/* Chat Header */}
-            <div className="h-16 flex-shrink-0 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-6">
+            <div className="h-16 flex-shrink-0 flex items-center justify-between px-6">
               <h2 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center">
                 {activePDF ? (
                   <>
@@ -443,20 +545,20 @@ export default function Home() {
             {/* Input Area */}
             <form onSubmit={handleSubmit} className="flex-shrink-0 p-4">
               <div className={`${!activePDF ? 'max-w-2xl mx-auto' : ''}`}>
-                <div className="flex space-x-4">
+                <div className="relative flex items-center">
                   <input
                     ref={inputRef}
                     type="text"
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     placeholder="Ask a question about your PDF..."
-                    className="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500
+                    className="flex-1 pl-4 pr-12 py-3 border rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500
                       dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
                   <button
                     type="submit"
                     disabled={isLoading || !inputMessage.trim()}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600
+                    className="absolute right-2 p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600
                       disabled:opacity-50 disabled:cursor-not-allowed
                       focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >

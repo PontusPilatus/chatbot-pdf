@@ -131,7 +131,7 @@ export default function Sidebar({
   ]
 
   return (
-    <div className={`flex flex-col bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 w-[320px] ${className}`}>
+    <div className={`flex flex-col bg-gray-100 dark:bg-gray-800 w-[320px] ${className}`}>
       {/* Sidebar Header */}
       <div className="h-16 flex items-center px-4">
         <div className="flex items-center">
@@ -564,7 +564,7 @@ export default function Sidebar({
         )}
 
         {/* Bottom Navigation */}
-        <div className="flex-shrink-0 p-2 space-y-2 border-t border-gray-200 dark:border-gray-700">
+        <div className="flex-shrink-0 p-2 space-y-2">
           <button
             onClick={() => setActiveTab(activeTab === 'settings' ? 'files' : 'settings')}
             className={`w-full flex items-center px-3 py-2 rounded-lg text-sm font-medium
